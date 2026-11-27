@@ -186,6 +186,7 @@ struct QuietIconButton: View {
     let help: String
     var selected = false
     var size: CGFloat = 28
+    var showsHoverBackground = true
     var action: () -> Void
     @State private var hovered = false
 
@@ -195,8 +196,9 @@ struct QuietIconButton: View {
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(selected ? accent : Color.secondary)
                 .frame(width: size, height: size)
-                .background(selected ? accent.opacity(0.16) : Color.primary.opacity(hovered ? 0.07 : 0),
+                .background(Color.primary.opacity(hovered && showsHoverBackground ? 0.07 : 0),
                             in: RoundedRectangle(cornerRadius: 7))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hovered = $0 }

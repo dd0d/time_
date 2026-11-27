@@ -136,7 +136,8 @@ private struct PanelPinButton: View {
 
     var body: some View {
         let title = store.isPinned ? L10n.text("Unpin Panel") : L10n.text("Pin Panel")
-        QuietIconButton(symbol: store.isPinned ? "pin.fill" : "pin", help: title, selected: store.isPinned, size: size) {
+        QuietIconButton(symbol: store.isPinned ? "pin.fill" : "pin", help: title,
+                        selected: store.isPinned, size: size, showsHoverBackground: false) {
             store.isPinned.toggle()
             store.onPinChanged?()
         }
