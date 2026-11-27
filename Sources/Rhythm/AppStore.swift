@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 enum AppPage: String, CaseIterable {
     case focus = "Compact", session = "Focus", plan = "Plan", summary = "History", analytics = "Analytics", categories = "Categories", settings = "Settings", idleReview = "Idle detection"
+    var title: String { L10n.label(rawValue) }
     var symbol: String {
         switch self {
         case .focus, .session: return "circle.dotted.circle"
@@ -112,13 +113,13 @@ final class AppStore: ObservableObject {
         return completed % rounds + 1
     }
     var phaseCaption: String {
-        if let pendingIdle { return "Idle time " + TimeText.duration(pendingIdle.duration(at: now)) }
-        if let active, active.isPaused { return "Paused" }
+        if let pendingIdle { return L10n.text("Idle time ") + TimeText.duration(pendingIdle.duration(at: now)) }
+        if let active, active.isPaused { return L10n.text("Paused") }
         if (active?.mode ?? mode) == .pomodoro {
-            return (pomodoroPhase.isBreak ? "Break" : "Focus") + " \(pomodoroRound)/\(ledger.preferences.pomodoro.roundsBeforeLongBreak)"
+            return (pomodoroPhase.isBreak ? L10n.text("Break") : L10n.text("Focus")) + " \(pomodoroRound)/\(ledger.preferences.pomodoro.roundsBeforeLongBreak)"
         }
-        if active?.isRunning == true { return "Focusing" }
-        return mode == .countdown ? "Timer" : "Stopwatch"
+        if active?.isRunning == true { return L10n.text("Focusing") }
+        return mode == .countdown ? L10n.text("Timer") : L10n.text("Stopwatch")
     }
 
     init(dataURL: URL? = nil, idleTimeProvider: @escaping () -> TimeInterval = SystemActivity.idleSeconds) {
@@ -137,7 +138,7 @@ final class AppStore: ObservableObject {
             } else if let backup = try file.loadBackup() {
                 initial = backup.ledger
                 initial.recoverAfterRelaunch(lastCheckpoint: backup.savedAt, at: Date())
-                errorMessage = "Data restored from backup because the main file was missing."
+                errorMessage = L10n.text("Data restored from backup because the main file was missing.")
             }
         } catch {
             // Preserve the original before attempting to restore a recovery copy.
@@ -147,17 +148,17 @@ final class AppStore: ObservableObject {
                 if let backup = try file.loadBackup() {
                     initial = backup.ledger
                     initial.recoverAfterRelaunch(lastCheckpoint: backup.savedAt, at: Date())
-                    errorMessage = "Data restored from backup. The original file was kept."
+                    errorMessage = L10n.text("Data restored from backup. The original file was kept.")
                 } else {
                     blocked = true
-                    errorMessage = "Could not read your data. The original file was kept. Open the data folder in Settings."
+                    errorMessage = L10n.text("Could not read your data. The original file was kept. Open the data folder in Settings.")
                 }
             } catch {
                 blocked = true
-                errorMessage = "Could not access your data file. Check the data folder in Settings."
+                errorMessage = L10n.text("Could not access your data file. Check the data folder in Settings.")
             }
         }
-        if initial.visibleCategories.isEmpty { initial.categories.append(TimeCategory(name: "Personal", color: .mint)) }
+        if initial.visibleCategories.isEmpty { initial.categories.append(TimeCategory(name: L10n.text("Personal"), color: .mint)) }
         let createdDailyTasks = initial.materializeDailyTasks(on: Date())
         ledger = initial
         selectedCategoryID = initial.preferences.lastCategoryID.flatMap { id in initial.visibleCategories.first { $0.id == id }?.id } ?? initial.visibleCategories[0].id
@@ -464,7 +465,7 @@ final class AppStore: ObservableObject {
                 case .failure(let error):
                     self.lastScheduledLedger = nil
                     self.saveFailed = true
-                    self.storageError = "Could not save changes: \(error.localizedDescription)"
+                    self.storageError = L10n.text("Could not save changes: \(error.localizedDescription)")
                 }
             }
         }
@@ -590,22 +591,22 @@ final class AppStore: ObservableObject {
     func exportCSV() {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.commaSeparatedText]
-        panel.nameFieldStringValue = "time_ history.csv"
+        panel.nameFieldStringValue = L10n.text("time_ history.csv")
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do { try CSVExport.sessions(ledger.sessions, categories: ledger.categories).write(to: url, atomically: true, encoding: .utf8) }
-        catch { storageError = "Could not export: \(error.localizedDescription)" }
+        catch { storageError = L10n.text("Could not export: \(error.localizedDescription)") }
     }
 
     func exportBackup() {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.json]
-        panel.nameFieldStringValue = "time_ backup.json"
+        panel.nameFieldStringValue = L10n.text("time_ backup.json")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             try encoder.encode(LedgerEnvelope(savedAt: Date(), ledger: ledger)).write(to: url, options: .atomic)
-        } catch { storageError = "Could not create backup: \(error.localizedDescription)" }
+        } catch { storageError = L10n.text("Could not create backup: \(error.localizedDescription)") }
     }
 }

@@ -37,8 +37,8 @@ struct AccentProgress: View {
                 Capsule().fill(accent).frame(width: geometry.size.width * min(1, max(0, value)))
             }
         }.frame(height: 5)
-            .accessibilityElement(children: .ignore).accessibilityLabel("Timer progress")
-            .accessibilityValue("\(Int(min(1, max(0, value)) * 100)) percent")
+            .accessibilityElement(children: .ignore).accessibilityLabel(L10n.text("Timer progress"))
+            .accessibilityValue(L10n.text("\(Int(min(1, max(0, value)) * 100)) percent"))
     }
 }
 
@@ -50,7 +50,7 @@ struct SelectionDropdown<Value: Hashable>: View {
     let title: (Value) -> String
     var rowTitle: ((Value) -> String)? = nil
     var dot: ((Value) -> Color?)? = nil
-    var accessibilityTitle = "Select"
+    var accessibilityTitle = L10n.text("Select")
     var footerTitle: String? = nil
     var footerAction: (() -> Void)? = nil
     @State private var expanded = false
@@ -158,9 +158,9 @@ struct AccentSlider: View {
 extension TrackingMode {
     var title: String {
         switch self {
-        case .countdown: return "Timer"
-        case .stopwatch: return "Stopwatch"
-        case .pomodoro: return "Pomodoro"
+        case .countdown: return L10n.text("Timer")
+        case .stopwatch: return L10n.text("Stopwatch")
+        case .pomodoro: return L10n.text("Pomodoro")
         }
     }
 }

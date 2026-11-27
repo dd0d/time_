@@ -62,7 +62,7 @@ final class BreakEdgeGlow {
     private func makePanels() {
         panels = NSScreen.screens.map { screen in
             let panel = GlowPanel(contentRect: screen.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-            panel.title = "Break glow"
+            panel.title = L10n.text("Break glow")
             panel.backgroundColor = .clear
             panel.isOpaque = false
             panel.hasShadow = false

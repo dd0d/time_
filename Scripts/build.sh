@@ -19,6 +19,9 @@ bundle="$PWD/dist/time_.app"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
 cp .build/release/Rhythm "$bundle/Contents/MacOS/time_"
 cp Resources/Info.plist "$bundle/Contents/Info.plist"
+for language in en ru; do
+    ditto "Resources/$language.lproj" "$bundle/Contents/Resources/$language.lproj"
+done
 swift -module-cache-path "$PWD/.build/module-cache" Scripts/make-icon.swift "$PWD/.build/AppIcon.iconset" "$bundle/Contents/Resources/AppIcon.icns"
 codesign --force --sign - --identifier software.rhythm.mac --options runtime --timestamp=none "$bundle"
 codesign --verify --deep --strict "$bundle"

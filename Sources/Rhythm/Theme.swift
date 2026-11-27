@@ -14,16 +14,16 @@ enum Palette {
 extension AccentChoice {
     var title: String {
         switch self {
-        case .system: return "System"
-        case .blue: return "Blue"
-        case .purple: return "Purple"
-        case .pink: return "Pink"
-        case .red: return "Red"
-        case .orange: return "Orange"
-        case .yellow: return "Yellow"
-        case .green: return "Green"
-        case .graphite: return "Graphite"
-        case .custom: return "Custom color"
+        case .system: return L10n.text("System")
+        case .blue: return L10n.text("Blue")
+        case .purple: return L10n.text("Purple")
+        case .pink: return L10n.text("Pink")
+        case .red: return L10n.text("Red")
+        case .orange: return L10n.text("Orange")
+        case .yellow: return L10n.text("Yellow")
+        case .green: return L10n.text("Green")
+        case .graphite: return L10n.text("Graphite")
+        case .custom: return L10n.text("Custom color")
         }
     }
 
@@ -101,7 +101,7 @@ struct RhythmAppearance: ViewModifier {
         content.accentColor(store.accentColor).tint(store.accentColor)
             .environment(\.rhythmAccent, store.accentColor)
             .environment(\.rhythmAccentForeground, store.accentForeground)
-            .environment(\.locale, Locale(identifier: "en"))
+            .environment(\.locale, L10n.locale)
     }
 }
 
@@ -140,8 +140,8 @@ extension MenuBarIcon {
     var title: String {
         switch self {
         case .rhythm: return "time_"
-        case .timer: return "Timer"
-        case .circle: return "Circle"
+        case .timer: return L10n.text("Timer")
+        case .circle: return L10n.text("Circle")
         }
     }
     var symbol: String {
@@ -310,15 +310,15 @@ struct CategoryPicker: View {
     }
     var body: some View {
         SelectionDropdown(selection: $selection, options: options,
-                          title: { store.ledger.category($0)?.name ?? "Category" },
+                          title: { store.ledger.category($0)?.name ?? L10n.text("Category") },
                           rowTitle: { id in
-            guard let category = store.ledger.category(id) else { return "Category" }
-            if !showsProgress { return category.name + (category.isArchived ? " · archived" : "") }
+            guard let category = store.ledger.category(id) else { return L10n.text("Category") }
+            if !showsProgress { return category.name + (category.isArchived ? L10n.text(" · archived") : "") }
             let worked = store.ledger.total(on: store.now, categoryID: id, at: store.now)
             let goal = store.ledger.plannedMinutes(for: id, on: store.now)
             return category.name + " · " + TimeText.duration(worked) + (goal > 0 ? " / " + TimeText.duration(Double(goal * 60)) : "")
-        }, dot: { store.ledger.category($0)?.color.tint }, accessibilityTitle: "Category",
-                          footerTitle: allowsManagement ? "Manage Categories…" : nil,
+        }, dot: { store.ledger.category($0)?.color.tint }, accessibilityTitle: L10n.text("Category"),
+                          footerTitle: allowsManagement ? L10n.text("Manage Categories…") : nil,
                           footerAction: allowsManagement ? { store.showCategories = true } : nil)
     }
 }

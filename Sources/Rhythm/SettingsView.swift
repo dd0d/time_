@@ -6,30 +6,40 @@ struct SettingsView: View {
     @EnvironmentObject var store: AppStore
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var loginError: String?
+    @AppStorage(L10n.languagePreference) private var language = "en"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             VStack(alignment: .leading, spacing: 9) {
-                Text("APPEARANCE").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-                AppSegments(selection: $store.ledger.preferences.appearance, options: ["system", "light", "dark"], title: { $0 == "system" ? "System" : $0 == "light" ? "Light" : "Dark" })
+                SectionCaption(title: L10n.text("LANGUAGE"))
+                AppSegments(selection: $language, options: ["en", "ru"], title: { $0 == "ru" ? "Русский" : "English" })
+                    .accessibilityLabel(L10n.text("Interface language"))
+                if language != L10n.language {
+                    Text(L10n.text("Quit and reopen time_ to apply the language."))
+                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                }
+            }
+            VStack(alignment: .leading, spacing: 9) {
+                Text(L10n.text("APPEARANCE")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                AppSegments(selection: $store.ledger.preferences.appearance, options: ["system", "light", "dark"], title: { $0 == "system" ? L10n.text("System") : $0 == "light" ? L10n.text("Light") : L10n.text("Dark") })
                     .onChange(of: store.ledger.preferences.appearance) { _, _ in store.save() }
             }
             glassSettings
             menuBarSettings
             accentSettings
             VStack(alignment: .leading, spacing: 10) {
-                Text("COMPACT PANEL").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-                settingToggle("Animate logo", symbol: "arrow.triangle.2.circlepath", binding: preference(\.animateLogo))
-                Text("Controls logo motion, including when Reduce Motion is enabled in macOS.")
+                Text(L10n.text("COMPACT PANEL")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                settingToggle(L10n.text("Animate logo"), symbol: "arrow.triangle.2.circlepath", binding: preference(\.animateLogo))
+                Text(L10n.text("Controls logo motion, including when Reduce Motion is enabled in macOS."))
                     .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             pomodoroSettings
             idleSettings
             VStack(spacing: 14) {
-                settingToggle("Completion sound", symbol: "speaker.wave.2", binding: preference(\.soundEnabled))
-                settingToggle("Timer notifications", symbol: "bell", binding: preference(\.notificationsEnabled))
-                settingToggle("Pause on lock", symbol: "lock", binding: preference(\.pauseOnLock))
-                settingToggle("Open at login", symbol: "sunrise", binding: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
+                settingToggle(L10n.text("Completion sound"), symbol: "speaker.wave.2", binding: preference(\.soundEnabled))
+                settingToggle(L10n.text("Timer notifications"), symbol: "bell", binding: preference(\.notificationsEnabled))
+                settingToggle(L10n.text("Pause on lock"), symbol: "lock", binding: preference(\.pauseOnLock))
+                settingToggle(L10n.text("Open at login"), symbol: "sunrise", binding: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
             }
             .cardSurface(padding: 14)
 
@@ -37,15 +47,15 @@ struct SettingsView: View {
                 Text(loginError).font(.system(size: 10)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
             }
             if SMAppService.mainApp.status == .requiresApproval {
-                Button("Allow in System Settings…") { SMAppService.openSystemSettingsLoginItems() }.font(.system(size: 11))
+                Button(L10n.text("Allow in System Settings…")) { SMAppService.openSystemSettingsLoginItems() }.font(.system(size: 11))
             }
-            Text("The timer pauses when your Mac sleeps. Resume it manually after waking.")
+            Text(L10n.text("The timer pauses when your Mac sleeps. Resume it manually after waking."))
                 .font(.system(size: 10)).foregroundStyle(.secondary).lineSpacing(3)
             VStack(alignment: .leading, spacing: 10) {
-                Text("DATA").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-                Button("Export History as CSV…") { store.exportCSV() }
-                Button("Save Backup…") { store.exportBackup() }
-                Button("Open Data Folder") {
+                Text(L10n.text("DATA")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Button(L10n.text("Export History as CSV…")) { store.exportCSV() }
+                Button(L10n.text("Save Backup…")) { store.exportBackup() }
+                Button(L10n.text("Open Data Folder")) {
                     let directory = store.file.url.deletingLastPathComponent()
                     try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                     NSWorkspace.shared.open(directory)
@@ -58,7 +68,7 @@ struct SettingsView: View {
                     Text("time_ \(version)").font(.system(size: 10)).foregroundStyle(.tertiary)
                 }
                 Spacer()
-                Text("Stored on this Mac").font(.system(size: 10)).foregroundStyle(.tertiary)
+                Text(L10n.text("Stored on this Mac")).font(.system(size: 10)).foregroundStyle(.tertiary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -68,18 +78,18 @@ struct SettingsView: View {
     private var glassSettings: some View {
         VStack(alignment: .leading, spacing: 13) {
             HStack {
-                Text("PANEL TRANSPARENCY").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text(L10n.text("PANEL TRANSPARENCY")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
                 Spacer()
-                Button("Reset") {
+                Button(L10n.text("Reset")) {
                     store.ledger.preferences.backgroundOpacity = GlassStyle.defaultOpacity
                     store.ledger.preferences.backgroundBlur = GlassStyle.defaultBlur
                     store.save()
                 }
                 .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(store.accentColor)
             }
-            glassSlider("Background opacity", value: $store.ledger.preferences.backgroundOpacity)
-            glassSlider("Blur", value: $store.ledger.preferences.backgroundBlur)
-            Text("Applies to the panel background.")
+            glassSlider(L10n.text("Background opacity"), value: $store.ledger.preferences.backgroundOpacity)
+            glassSlider(L10n.text("Blur"), value: $store.ledger.preferences.backgroundBlur)
+            Text(L10n.text("Applies to the panel background."))
                 .font(.system(size: 10)).foregroundStyle(.tertiary).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -98,32 +108,32 @@ struct SettingsView: View {
 
     private var menuBarSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("MENU BAR").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-            settingToggle("Show time", symbol: "clock", binding: preference(\.showMenuBarTime))
+            Text(L10n.text("MENU BAR")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            settingToggle(L10n.text("Show time"), symbol: "clock", binding: preference(\.showMenuBarTime))
             HStack {
-                Text("Icon").font(.system(size: 12)).foregroundStyle(.secondary)
+                Text(L10n.text("Icon")).font(.system(size: 12)).foregroundStyle(.secondary)
                 Spacer()
-                SelectionDropdown(selection: $store.ledger.preferences.menuBarIcon, options: MenuBarIcon.allCases, title: { $0.title }, accessibilityTitle: "Menu bar icon")
+                SelectionDropdown(selection: $store.ledger.preferences.menuBarIcon, options: MenuBarIcon.allCases, title: { $0.title }, accessibilityTitle: L10n.text("Menu bar icon"))
                     .frame(width: 140).onChange(of: store.ledger.preferences.menuBarIcon) { _, _ in store.save() }
             }
-            Text("Show the timer during an active session.").font(.system(size: 10)).foregroundStyle(.tertiary)
+            Text(L10n.text("Show the timer during an active session.")).font(.system(size: 10)).foregroundStyle(.tertiary)
         }
     }
 
     private var accentSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("ACCENT COLOR").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            Text(L10n.text("ACCENT COLOR")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
             HStack {
                 Button {
                     store.ledger.preferences.accentChoice = .system
                     store.save()
                 } label: {
-                    Label("System", systemImage: store.ledger.preferences.accentChoice == .system ? "checkmark.circle.fill" : "circle")
+                    Label(L10n.text("System"), systemImage: store.ledger.preferences.accentChoice == .system ? "checkmark.circle.fill" : "circle")
                 }
                 .buttonStyle(.plain).font(.system(size: 12))
                 .foregroundStyle(store.ledger.preferences.accentChoice == .system ? store.accentColor : .secondary)
                 Spacer()
-                ColorPicker("Custom color", selection: Binding(get: { store.accentColor }, set: { store.setCustomAccent($0) }), supportsOpacity: false)
+                ColorPicker(L10n.text("Custom color"), selection: Binding(get: { store.accentColor }, set: { store.setCustomAccent($0) }), supportsOpacity: false)
                     .font(.system(size: 11)).fixedSize()
             }
             HStack(spacing: 12) {
@@ -149,31 +159,31 @@ struct SettingsView: View {
 
     private var pomodoroSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("POMODORO").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-            pomodoroStepper("Focus", value: $store.ledger.preferences.pomodoro.focusMinutes, range: 1...120, suffix: "min")
-            pomodoroStepper("Short break", value: $store.ledger.preferences.pomodoro.shortBreakMinutes, range: 1...30, suffix: "min")
-            pomodoroStepper("Long break", value: $store.ledger.preferences.pomodoro.longBreakMinutes, range: 1...60, suffix: "min")
-            pomodoroStepper("Until long break", value: $store.ledger.preferences.pomodoro.roundsBeforeLongBreak, range: 2...8, suffix: "sessions")
-            settingToggle("Auto-start breaks", symbol: "cup.and.saucer", binding: Binding(get: { store.ledger.preferences.pomodoro.autoStartBreaks }, set: {
+            Text(L10n.text("POMODORO")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            pomodoroStepper(L10n.text("Focus"), value: $store.ledger.preferences.pomodoro.focusMinutes, range: 1...120, suffix: L10n.text("min"))
+            pomodoroStepper(L10n.text("Short break"), value: $store.ledger.preferences.pomodoro.shortBreakMinutes, range: 1...30, suffix: L10n.text("min"))
+            pomodoroStepper(L10n.text("Long break"), value: $store.ledger.preferences.pomodoro.longBreakMinutes, range: 1...60, suffix: L10n.text("min"))
+            pomodoroStepper(L10n.text("Until long break"), value: $store.ledger.preferences.pomodoro.roundsBeforeLongBreak, range: 2...8, suffix: L10n.text("sessions"))
+            settingToggle(L10n.text("Auto-start breaks"), symbol: "cup.and.saucer", binding: Binding(get: { store.ledger.preferences.pomodoro.autoStartBreaks }, set: {
                 store.ledger.preferences.pomodoro.autoStartBreaks = $0; store.save()
             }))
-            settingToggle("Edge glow during breaks", symbol: "light.beacon.min", binding: preference(\.breakEdgeGlowEnabled))
+            settingToggle(L10n.text("Edge glow during breaks"), symbol: "light.beacon.min", binding: preference(\.breakEdgeGlowEnabled))
             if store.ledger.preferences.breakEdgeGlowEnabled { glowSettings }
-            Text("Start each focus session manually. Breaks are excluded from work totals.")
+            Text(L10n.text("Start each focus session manually. Breaks are excluded from work totals."))
                 .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var glowSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            glowSlider("Width", value: $store.ledger.preferences.glowWidth, range: 24...320, display: "\(Int(store.ledger.preferences.glowWidth.rounded())) pt")
-            glowSlider("Intensity", value: $store.ledger.preferences.glowIntensity, range: 0...1, display: "\(Int((store.ledger.preferences.glowIntensity * 100).rounded()))%")
+            glowSlider(L10n.text("Width"), value: $store.ledger.preferences.glowWidth, range: 24...320, display: L10n.text("\(Int(store.ledger.preferences.glowWidth.rounded())) pt"))
+            glowSlider(L10n.text("Intensity"), value: $store.ledger.preferences.glowIntensity, range: 0...1, display: "\(Int((store.ledger.preferences.glowIntensity * 100).rounded()))%")
             HStack {
-                Button(store.isGlowPreviewing ? "Stop Preview" : "Preview Glow") {
+                Button(store.isGlowPreviewing ? L10n.text("Stop Preview") : L10n.text("Preview Glow")) {
                     if store.isGlowPreviewing { store.stopGlowPreview() } else { store.showGlowPreview() }
                 }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(store.accentColor)
                 Spacer()
-                Button("Reset") {
+                Button(L10n.text("Reset")) {
                     store.ledger.preferences.glowWidth = GlowStyle.defaultWidth
                     store.ledger.preferences.glowIntensity = GlowStyle.defaultIntensity
                     store.save()
@@ -190,7 +200,7 @@ struct SettingsView: View {
                 Spacer()
                 Text(display).font(.system(size: 10)).monospacedDigit().foregroundStyle(.secondary)
             }
-            AccentSlider(value: value, range: range, accessibilityTitle: "Glow: " + title, onEditingChanged: { editing in
+            AccentSlider(value: value, range: range, accessibilityTitle: L10n.text("Glow: ") + title, onEditingChanged: { editing in
                 store.showGlowPreview()
                 if !editing { store.save() }
             })
@@ -199,16 +209,16 @@ struct SettingsView: View {
 
     private var idleSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("IDLE DETECTION").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-            settingToggle("Detect idle time", symbol: "moon.zzz", binding: preference(\.idleCheckEnabled))
+            Text(L10n.text("IDLE DETECTION")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            settingToggle(L10n.text("Detect idle time"), symbol: "moon.zzz", binding: preference(\.idleCheckEnabled))
             HStack {
-                Text("After").font(.system(size: 11))
+                Text(L10n.text("After")).font(.system(size: 11))
                 Spacer()
-                SelectionDropdown(selection: $store.ledger.preferences.idleMinutes, options: [1, 3, 5, 10, 15, 30], title: { "\($0) min" }, accessibilityTitle: "Idle threshold")
+                SelectionDropdown(selection: $store.ledger.preferences.idleMinutes, options: [1, 3, 5, 10, 15, 30], title: { L10n.text("\($0) min") }, accessibilityTitle: L10n.text("Idle threshold"))
                     .frame(width: 110).disabled(!store.ledger.preferences.idleCheckEnabled)
                     .onChange(of: store.ledger.preferences.idleMinutes) { _, _ in store.save() }
             }
-            Text("The timer pauses when you're idle. Choose whether that time counts when you return.")
+            Text(L10n.text("The timer pauses when you're idle. Choose whether that time counts when you return."))
                 .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -250,7 +260,7 @@ struct SettingsView: View {
             loginError = nil
         } catch {
             launchAtLogin = SMAppService.mainApp.status == .enabled
-            loginError = "Move time_ to Applications and try again: \(error.localizedDescription)"
+            loginError = L10n.text("Move time_ to Applications and try again: \(error.localizedDescription)")
         }
     }
 }
@@ -277,7 +287,7 @@ struct CategoriesView: View {
                                     Circle().fill(category.color.tint).frame(width: 9, height: 9)
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(category.name).font(.system(size: 12, weight: .medium)).foregroundStyle(.primary)
-                                        Text(category.dailyGoalMinutes == 0 ? "Based on tasks" : TimeText.duration(Double(category.dailyGoalMinutes * 60)) + " per day")
+                                        Text(category.dailyGoalMinutes == 0 ? L10n.text("Based on tasks") : TimeText.duration(Double(category.dailyGoalMinutes * 60)) + L10n.text(" per day"))
                                             .font(.system(size: 10)).foregroundStyle(.secondary)
                                     }
                                     Spacer()
@@ -290,12 +300,12 @@ struct CategoriesView: View {
                 }
                 Button {
                     editingID = nil; name = ""; color = .lavender; goal = 0; isEditing = true
-                } label: { Label("New Category", systemImage: "plus") }.buttonStyle(PrimaryButton())
+                } label: { Label(L10n.text("New Category"), systemImage: "plus") }.buttonStyle(PrimaryButton())
                 let archived = store.ledger.categories.filter(\.isArchived)
                 if !archived.isEmpty {
                     CategoryArchiveMenu(categories: archived)
                 }
-                Text("Set the goal to zero to use task estimates.")
+                Text(L10n.text("Set the goal to zero to use task estimates."))
                     .font(.system(size: 10)).foregroundStyle(.secondary).lineSpacing(3)
             }
         }
@@ -305,8 +315,8 @@ struct CategoriesView: View {
     private var editor: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
-                Text("Name").font(.system(size: 11)).foregroundStyle(.secondary)
-                TextField("For example, a project", text: $name).textFieldStyle(.roundedBorder)
+                Text(L10n.text("Name")).font(.system(size: 11)).foregroundStyle(.secondary)
+                TextField(L10n.text("For example, a project"), text: $name).textFieldStyle(.roundedBorder)
             }
             HStack(spacing: 13) {
                 ForEach(CategoryColor.allCases, id: \.self) { candidate in
@@ -319,14 +329,14 @@ struct CategoriesView: View {
                 }
             }
             HStack {
-                Text("Daily goal").font(.system(size: 12)).foregroundStyle(.secondary)
+                Text(L10n.text("Daily goal")).font(.system(size: 12)).foregroundStyle(.secondary)
                 Spacer()
-                TextField("Minutes", value: $goal, format: .number).textFieldStyle(.roundedBorder).frame(width: 55)
-                Text("min").font(.system(size: 11)).foregroundStyle(.secondary)
-                Stepper("Daily goal", value: $goal, in: 0...1440, step: 15).labelsHidden()
+                TextField(L10n.text("Minutes"), value: $goal, format: .number).textFieldStyle(.roundedBorder).frame(width: 55)
+                Text(L10n.text("min")).font(.system(size: 11)).foregroundStyle(.secondary)
+                Stepper(L10n.text("Daily goal"), value: $goal, in: 0...1440, step: 15).labelsHidden()
             }
-            Text("Zero uses task estimates.").font(.system(size: 10)).foregroundStyle(.tertiary)
-            Button(editingID == nil ? "Create Category" : "Save") {
+            Text(L10n.text("Zero uses task estimates.")).font(.system(size: 10)).foregroundStyle(.tertiary)
+            Button(editingID == nil ? L10n.text("Create Category") : L10n.text("Save")) {
                 let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !clean.isEmpty else { return }
                 if let id = editingID, var category = store.ledger.category(id) {
@@ -338,10 +348,10 @@ struct CategoriesView: View {
             .buttonStyle(PrimaryButton()).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .keyboardShortcut(.return, modifiers: .command)
             HStack {
-                Button("Back") { isEditing = false }.font(.system(size: 11))
+                Button(L10n.text("Back")) { isEditing = false }.font(.system(size: 11))
                 Spacer()
                 if let id = editingID {
-                    Button("Archive") { store.archiveCategory(id); isEditing = false }
+                    Button(L10n.text("Archive")) { store.archiveCategory(id); isEditing = false }
                         .font(.system(size: 11)).foregroundStyle(.secondary)
                         .disabled(store.categories.count <= 1 || store.active?.categoryID == id)
                 }
@@ -351,12 +361,12 @@ struct CategoriesView: View {
 
     private func colorName(_ color: CategoryColor) -> String {
         switch color {
-        case .mint: return "Mint"
-        case .blue: return "Light blue"
-        case .lavender: return "Lavender"
-        case .peach: return "Peach"
-        case .rose: return "Pink"
-        case .yellow: return "Yellow"
+        case .mint: return L10n.text("Mint")
+        case .blue: return L10n.text("Light blue")
+        case .lavender: return L10n.text("Lavender")
+        case .peach: return L10n.text("Peach")
+        case .rose: return L10n.text("Pink")
+        case .yellow: return L10n.text("Yellow")
         }
     }
 }
@@ -369,7 +379,7 @@ private struct CategoryArchiveMenu: View {
     var body: some View {
         Button { expanded.toggle() } label: {
             HStack(spacing: 7) {
-                Text("Archive · \(categories.count)").font(.system(size: 11))
+                Text(L10n.text("Archive · \(categories.count)")).font(.system(size: 11))
                 Spacer()
                 Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
             }
@@ -378,10 +388,10 @@ private struct CategoryArchiveMenu: View {
             .background(.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 7))
             .contentShape(RoundedRectangle(cornerRadius: 7))
         }
-        .buttonStyle(.plain).accessibilityLabel("Archived categories: \(categories.count)")
+        .buttonStyle(.plain).accessibilityLabel(L10n.text("Archived categories: \(categories.count)"))
         .popover(isPresented: $expanded, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 7) {
-                Text("ARCHIVED CATEGORIES").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text(L10n.text("ARCHIVED CATEGORIES")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
                     .padding(.horizontal, 9).padding(.top, 5)
                 ScrollView {
                     VStack(spacing: 3) {
@@ -400,7 +410,7 @@ private struct CategoryArchiveMenu: View {
                                 .foregroundStyle(.primary).padding(.horizontal, 9).frame(minHeight: 32)
                                 .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain).accessibilityLabel("Restore \(category.name)")
+                            .buttonStyle(.plain).accessibilityLabel(L10n.text("Restore \(category.name)"))
                         }
                     }
                 }.frame(height: min(280, CGFloat(categories.count) * 35 - 3))

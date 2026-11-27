@@ -10,9 +10,9 @@ public enum PomodoroPhase: String, Codable, Sendable {
     public var isBreak: Bool { self != .focus }
     public var title: String {
         switch self {
-        case .focus: return "Pomodoro"
-        case .shortBreak: return "Short break"
-        case .longBreak: return "Long break"
+        case .focus: return L10n.text("Pomodoro")
+        case .shortBreak: return L10n.text("Short break")
+        case .longBreak: return L10n.text("Long break")
         }
     }
 }
@@ -185,7 +185,7 @@ public struct WorkSession: Identifiable, Codable, Equatable, Sendable {
     public var isBreak: Bool { mode == .pomodoro && pomodoroPhase?.isBreak == true }
     public var displayTitle: String {
         if isBreak { return pomodoroPhase!.title }
-        return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? (mode == .pomodoro ? "Pomodoro" : "Focus") : title
+        return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? (mode == .pomodoro ? L10n.text("Pomodoro") : L10n.text("Focus")) : title
     }
 
     public func elapsed(at now: Date) -> TimeInterval {
@@ -298,9 +298,9 @@ public struct Ledger: Codable, Equatable, Sendable {
     public var preferences: Preferences
 
     public init(categories: [TimeCategory] = [
-        TimeCategory(name: "Work", color: .lavender),
-        TimeCategory(name: "Study", color: .blue),
-        TimeCategory(name: "Personal", color: .rose)
+        TimeCategory(name: L10n.text("Work"), color: .lavender),
+        TimeCategory(name: L10n.text("Study"), color: .blue),
+        TimeCategory(name: L10n.text("Personal"), color: .rose)
     ], tasks: [PlanTask] = [], sessions: [WorkSession] = [], activeSession: WorkSession? = nil, preferences: Preferences = Preferences(), pomodoroProgress: PomodoroProgress? = nil, idleReview: IdleReview? = nil, dailyTaskSchedules: [DailyTaskSchedule] = []) {
         self.categories = categories
         self.tasks = tasks
@@ -421,8 +421,8 @@ public enum TimeText {
 
     public static func duration(_ seconds: TimeInterval) -> String {
         let minutes = max(0, Int(seconds / 60))
-        if seconds > 0 && minutes == 0 { return "< 1 min" }
-        if minutes >= 60 { return minutes % 60 == 0 ? "\(minutes / 60) hr" : "\(minutes / 60) hr \(minutes % 60) min" }
-        return "\(minutes) min"
+        if seconds > 0 && minutes == 0 { return L10n.text("< 1 min") }
+        if minutes >= 60 { return minutes % 60 == 0 ? L10n.text("\(minutes / 60) hr") : L10n.text("\(minutes / 60) hr \(minutes % 60) min") }
+        return L10n.text("\(minutes) min")
     }
 }

@@ -27,7 +27,7 @@ struct SummaryView: View {
             Button { store.page = .analytics } label: {
                 HStack(spacing: 9) {
                     Image(systemName: "square.grid.3x3.fill").foregroundStyle(store.accentColor)
-                    Text("Analytics").font(.system(size: 12, weight: .medium))
+                    Text(L10n.text("Analytics")).font(.system(size: 12, weight: .medium))
                     Spacer()
                     Image(systemName: "chevron.right").font(.system(size: 9)).foregroundStyle(.secondary)
                 }
@@ -36,10 +36,10 @@ struct SummaryView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text("Focus time").font(.system(size: 11)).foregroundStyle(.secondary)
+                        Text(L10n.text("Focus time")).font(.system(size: 11)).foregroundStyle(.secondary)
                         Text(TimeText.duration(store.totalSelectedDay)).timeDisplay(size: 27)
                         if planned > 0 {
-                            Text("of " + TimeText.duration(Double(planned * 60)) + " planned")
+                            Text(L10n.text("of ") + TimeText.duration(Double(planned * 60)) + L10n.text(" planned"))
                                 .font(.system(size: 11)).foregroundStyle(.secondary)
                         }
                     }
@@ -56,7 +56,7 @@ struct SummaryView: View {
                         }
                     }
                     .frame(width: 58, height: 58).padding(.top, 6)
-                    .accessibilityLabel("Goal progress")
+                    .accessibilityLabel(L10n.text("Goal progress"))
                 }
                 if store.totalSelectedDay > 0 { distributionBar }
             }
@@ -64,9 +64,9 @@ struct SummaryView: View {
 
             VStack(spacing: 13) {
                 HStack {
-                    SectionCaption(title: "CATEGORIES")
+                    SectionCaption(title: L10n.text("CATEGORIES"))
                     Button { store.showCategories = true } label: { Image(systemName: "slider.horizontal.3").font(.system(size: 11)).foregroundStyle(.tertiary) }
-                        .buttonStyle(.plain).accessibilityLabel("Goals and categories")
+                        .buttonStyle(.plain).accessibilityLabel(L10n.text("Goals and categories"))
                 }
                 ForEach(relevantCategories) { category in CategoryProgress(category: category, day: store.selectedDay) }
             }
@@ -74,9 +74,9 @@ struct SummaryView: View {
             weekChart
 
             VStack(spacing: 11) {
-                SectionCaption(title: "SESSIONS", trailing: "\(sessions.count)")
+                SectionCaption(title: L10n.text("SESSIONS"), trailing: "\(sessions.count)")
                 if sessions.isEmpty {
-                    EmptyNote(symbol: "clock", title: "No sessions", subtitle: "Start the timer to record time.")
+                    EmptyNote(symbol: "clock", title: L10n.text("No sessions"), subtitle: L10n.text("Start the timer to record time."))
                         .cardSurface(padding: 0)
                 } else {
                     VStack(spacing: 0) {
@@ -89,10 +89,10 @@ struct SummaryView: View {
                 }
             }
         }
-        .alert("Delete session?", isPresented: Binding(get: { deletingSession != nil }, set: { if !$0 { deletingSession = nil } })) {
-            Button("Cancel", role: .cancel) { deletingSession = nil }
-            Button("Delete", role: .destructive) { if let session = deletingSession { store.deleteSession(session.id) }; deletingSession = nil }
-        } message: { Text("This removes its time from totals.") }
+        .alert(L10n.text("Delete session?"), isPresented: Binding(get: { deletingSession != nil }, set: { if !$0 { deletingSession = nil } })) {
+            Button(L10n.text("Cancel"), role: .cancel) { deletingSession = nil }
+            Button(L10n.text("Delete"), role: .destructive) { if let session = deletingSession { store.deleteSession(session.id) }; deletingSession = nil }
+        } message: { Text(L10n.text("This removes its time from totals.")) }
     }
 
     private var distributionBar: some View {
@@ -118,7 +118,7 @@ struct SummaryView: View {
         let maximum = max(3600, days.map { store.ledger.total(on: $0, at: store.now) }.max() ?? 0)
         let weekTotal = days.reduce(0.0) { $0 + store.ledger.total(on: $1, at: store.now) }
         return VStack(spacing: 13) {
-            SectionCaption(title: calendar.isDate(store.selectedDay, equalTo: Date(), toGranularity: .weekOfYear) ? "THIS WEEK" : "WEEK", trailing: TimeText.duration(weekTotal))
+            SectionCaption(title: calendar.isDate(store.selectedDay, equalTo: Date(), toGranularity: .weekOfYear) ? L10n.text("THIS WEEK") : L10n.text("WEEK"), trailing: TimeText.duration(weekTotal))
             HStack(alignment: .bottom, spacing: 12) {
                 ForEach(days, id: \.self) { day in
                     let total = store.ledger.total(on: day, at: store.now)
@@ -133,13 +133,13 @@ struct SummaryView: View {
                                     .frame(height: total > 0 ? max(4, 48 * total / maximum) : 0)
                             }
                             .frame(height: 48)
-                            Text(day.formatted(.dateTime.locale(Locale(identifier: "en")).weekday(.narrow)).uppercased())
+                            Text(day.formatted(.dateTime.locale(L10n.locale).weekday(.narrow)).uppercased())
                                 .font(.system(size: 10, weight: selected ? .semibold : .regular))
                                 .foregroundStyle(selected ? Color.primary : Color.secondary)
                         }
                     }
                     .buttonStyle(.plain).disabled(day > Calendar.current.startOfDay(for: Date()))
-                    .accessibilityLabel(day.formatted(.dateTime.locale(Locale(identifier: "en")).weekday(.wide)) + ": " + TimeText.duration(total))
+                    .accessibilityLabel(day.formatted(.dateTime.locale(L10n.locale).weekday(.wide)) + ": " + TimeText.duration(total))
                 }
             }
         }
@@ -154,7 +154,7 @@ struct SummaryView: View {
             RoundedRectangle(cornerRadius: 2).fill(store.ledger.category(session.categoryID)?.color.tint ?? store.accentColor).frame(width: 3, height: 29)
             VStack(alignment: .leading, spacing: 5) {
                 Text(session.displayTitle).font(.system(size: 12, weight: .medium)).lineLimit(1)
-                Text(max(dayStart, session.startedAt).formatted(.dateTime.locale(Locale(identifier: "en")).hour().minute()) + " · " + (active ? (session.isPaused ? "paused" : "now") : min(dayEnd, session.endedAt!).formatted(.dateTime.locale(Locale(identifier: "en")).hour().minute())))
+                Text(max(dayStart, session.startedAt).formatted(.dateTime.locale(L10n.locale).hour().minute()) + " · " + (active ? (session.isPaused ? L10n.text("paused") : L10n.text("now")) : min(dayEnd, session.endedAt!).formatted(.dateTime.locale(L10n.locale).hour().minute())))
                     .font(.system(size: 10)).foregroundStyle(.secondary).monospacedDigit()
             }
             Spacer(minLength: 4)
@@ -164,7 +164,7 @@ struct SummaryView: View {
         .padding(.vertical, 9)
         .contextMenu {
             if !active {
-                Button("Repeat Task", systemImage: "arrow.clockwise") {
+                Button(L10n.text("Repeat Task"), systemImage: "arrow.clockwise") {
                     guard store.active == nil else { return }
                     store.title = session.title
                     store.selectedCategoryID = session.categoryID
@@ -175,9 +175,9 @@ struct SummaryView: View {
                 }
                 .disabled(store.active != nil)
                 Divider()
-                Button("Delete Session…", systemImage: "trash", role: .destructive) { deletingSession = session }
+                Button(L10n.text("Delete Session…"), systemImage: "trash", role: .destructive) { deletingSession = session }
             } else {
-                Button("Open Timer") { store.page = .focus }
+                Button(L10n.text("Open Timer")) { store.page = .focus }
             }
         }
     }

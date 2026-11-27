@@ -1,8 +1,9 @@
-# time_ 1.7.0
+# time_ 1.7.1
 
 ## GitHub release description
 
-time_ now uses English for the interface, notifications, and CSV headings. Existing tasks, category names, and history are preserved.
+- English is the default. Russian is available in Settings after restarting time_.
+- The timer panel uses a normal floating window level so system overlays can appear above it.
 
 Requires macOS 14 or later and a Mac with Apple Silicon.
 
@@ -10,9 +11,9 @@ Open `time_-macOS-arm64.dmg` and drag `time_` to Applications. A ZIP is also ava
 
 ## Publish
 
-1. Push the release commit and tag `v1.7.0`. Match the tag to `CFBundleShortVersionString` in `Resources/Info.plist`.
+1. Push the release commit and tag `v1.7.1`. Match the tag to `CFBundleShortVersionString` in `Resources/Info.plist`.
 2. Run the **macOS** workflow on `main` to get the DMG, ZIP, and SHA-256 files. For a local build, run `zsh Scripts/build.sh` followed by `zsh Scripts/make-dmg.sh`.
-3. Create a release for `v1.7.0`. Use `time_ 1.7.0` as the title and copy the description above. Attach the packages and their checksums before publishing.
+3. Create a release for `v1.7.1`. Use `time_ 1.7.1` as the title and copy the description above. Attach the packages and their checksums before publishing.
 4. Set it as the latest release to update the download link in README.
 
 Keep the DMG and ZIP asset names for future releases. GitHub uses them to resolve the [latest-release download URLs](https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases).

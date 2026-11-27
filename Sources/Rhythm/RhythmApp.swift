@@ -75,8 +75,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         panel.isMovable = store.isPinned
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.level = store.isPinned ? .floating : .popUpMenu
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.level = .floating
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         panel.contentView = GlassHostingView(rootView: RootView().environmentObject(store))
         panel.delegate = self
 
@@ -85,7 +85,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         store.onCloseRequested = { [weak self] in self?.hidePanel(force: true) }
         store.onPinChanged = { [weak self] in
             guard let self else { return }
-            self.panel.level = self.store.isPinned ? .floating : .popUpMenu
             self.panel.isMovable = self.store.isPinned
             self.panel.isMovableByWindowBackground = self.store.isPinned
             if !self.store.isPinned { self.positionPanel() }
@@ -101,6 +100,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
 
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(willSleep), name: NSWorkspace.willSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(didWake), name: NSWorkspace.didWakeNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(applicationActivated(_:)), name: NSWorkspace.didActivateApplicationNotification, object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenLocked), name: NSNotification.Name("com.apple.screenIsLocked"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(calendarChanged), name: .NSCalendarDayChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(calendarChanged), name: .NSSystemTimeZoneDidChange, object: nil)
@@ -139,6 +139,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func applicationDidResignActive(_ notification: Notification) {
+        if panel?.isVisible == true { hidePanel() }
+    }
+
+    @objc private func applicationActivated(_ notification: Notification) {
+        guard panel?.isVisible == true,
+              let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              let identifier = application.bundleIdentifier,
+              ["com.apple.dock", "com.apple.launchpad.launcher"].contains(identifier) else { return }
+        hidePanel(force: true)
+    }
 
     @objc private func togglePanel(_ sender: Any?) {
         if NSApplication.shared.currentEvent?.type == .rightMouseUp { showContextMenu() }
@@ -209,14 +221,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         let hint: String
         if let review = store.pendingIdle {
             symbol = "exclamationmark.circle"
-            hint = "Idle time · " + TimeText.duration(review.duration(at: now)) + ". Timer paused. Open the menu to review idle time."
+            hint = L10n.text("Idle time · ") + TimeText.duration(review.duration(at: now)) + L10n.text(". Timer paused. Open the menu to review idle time.")
         } else if let active = store.active {
             let time = active.mode.isTimed ? active.remaining(at: now) : active.elapsed(at: now)
             if store.ledger.preferences.showMenuBarTime { title = " " + TimeText.clock(time, countdown: active.mode.isTimed) }
             if active.isPaused { symbol = "pause.circle" }
-            hint = active.displayTitle + " · " + (store.ledger.category(active.categoryID)?.name ?? "Category") + " · " + store.phaseCaption
+            hint = active.displayTitle + " · " + (store.ledger.category(active.categoryID)?.name ?? L10n.text("Category")) + " · " + store.phaseCaption
         } else {
-            hint = "time_ · today " + TimeText.duration(store.totalToday) + " · ⌃⌥Space"
+            hint = L10n.text("time_ · today ") + TimeText.duration(store.totalToday) + L10n.text(" · ⌃⌥Space")
         }
         let fingerprint = title + "|" + symbol + "|" + hint
         guard fingerprint != statusFingerprint else { return }
@@ -233,17 +245,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
 
     private func showContextMenu() {
         let menu = NSMenu()
-        menu.addItem(withTitle: "Open time_", action: #selector(openFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.text("Open time_"), action: #selector(openFromMenu), keyEquivalent: "")
         if let active = store.active {
-            menu.addItem(withTitle: active.isRunning ? "Pause" : "Resume", action: #selector(pauseFromMenu), keyEquivalent: "")
-            menu.addItem(withTitle: "Stop and Save", action: #selector(finishFromMenu), keyEquivalent: "")
+            menu.addItem(withTitle: active.isRunning ? L10n.text("Pause") : L10n.text("Resume"), action: #selector(pauseFromMenu), keyEquivalent: "")
+            menu.addItem(withTitle: L10n.text("Stop and Save"), action: #selector(finishFromMenu), keyEquivalent: "")
         }
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Daily Plan…", action: #selector(planFromMenu), keyEquivalent: "")
-        menu.addItem(withTitle: "History…", action: #selector(summaryFromMenu), keyEquivalent: "")
-        menu.addItem(withTitle: "Settings…", action: #selector(settingsFromMenu), keyEquivalent: ",")
+        menu.addItem(withTitle: L10n.text("Daily Plan…"), action: #selector(planFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.text("History…"), action: #selector(summaryFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.text("Settings…"), action: #selector(settingsFromMenu), keyEquivalent: ",")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit time_", action: #selector(quitFromMenu), keyEquivalent: "q")
+        menu.addItem(withTitle: L10n.text("Quit time_"), action: #selector(quitFromMenu), keyEquivalent: "q")
         for item in menu.items { item.target = self }
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
@@ -278,30 +290,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         let main = NSMenu()
         let applicationItem = NSMenuItem()
         let application = NSMenu(title: "time_")
-        application.addItem(withTitle: "Settings…", action: #selector(settingsFromMenu), keyEquivalent: ",").target = self
+        application.addItem(withTitle: L10n.text("Settings…"), action: #selector(settingsFromMenu), keyEquivalent: ",").target = self
         application.addItem(.separator())
-        application.addItem(withTitle: "Quit time_", action: #selector(quitFromMenu), keyEquivalent: "q").target = self
+        application.addItem(withTitle: L10n.text("Quit time_"), action: #selector(quitFromMenu), keyEquivalent: "q").target = self
         applicationItem.submenu = application
         main.addItem(applicationItem)
         let editItem = NSMenuItem()
-        let edit = NSMenu(title: "Edit")
-        edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
-        let redo = edit.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+        let edit = NSMenu(title: L10n.text("Edit"))
+        edit.addItem(withTitle: L10n.text("Undo"), action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = edit.addItem(withTitle: L10n.text("Redo"), action: Selector(("redo:")), keyEquivalent: "z")
         redo.keyEquivalentModifierMask = [.command, .shift]
         edit.addItem(.separator())
-        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        edit.addItem(withTitle: L10n.text("Cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: L10n.text("Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: L10n.text("Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: L10n.text("Select All"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = edit
         main.addItem(editItem)
         let windowItem = NSMenuItem()
-        let window = NSMenu(title: "Window")
-        window.addItem(withTitle: "Timer", action: #selector(openFromMenu), keyEquivalent: "1").target = self
-        window.addItem(withTitle: "Plan", action: #selector(planFromMenu), keyEquivalent: "2").target = self
-        window.addItem(withTitle: "History", action: #selector(summaryFromMenu), keyEquivalent: "3").target = self
+        let window = NSMenu(title: L10n.text("Window"))
+        window.addItem(withTitle: L10n.text("Timer"), action: #selector(openFromMenu), keyEquivalent: "1").target = self
+        window.addItem(withTitle: L10n.text("Plan"), action: #selector(planFromMenu), keyEquivalent: "2").target = self
+        window.addItem(withTitle: L10n.text("History"), action: #selector(summaryFromMenu), keyEquivalent: "3").target = self
         window.addItem(.separator())
-        window.addItem(withTitle: "Close Window", action: #selector(closeFromMenu), keyEquivalent: "w").target = self
+        window.addItem(withTitle: L10n.text("Close Window"), action: #selector(closeFromMenu), keyEquivalent: "w").target = self
         windowItem.submenu = window
         main.addItem(windowItem)
         NSApplication.shared.mainMenu = main
@@ -315,17 +327,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         if store.ledger.preferences.soundEnabled { NSSound(named: "Glass")?.play() }
         if store.ledger.preferences.notificationsEnabled {
             let content = UNMutableNotificationContent()
-            content.title = session.isBreak ? "Break complete" : "Time for a break"
+            content.title = session.isBreak ? L10n.text("Break complete") : L10n.text("Time for a break")
             content.body = session.displayTitle + " · " + TimeText.duration(session.elapsed(at: session.endedAt ?? Date()))
             if session.mode == .pomodoro {
                 if session.isBreak {
-                    content.title = "Break complete"
-                    content.body = "Click the circle to start the next focus session."
+                    content.title = L10n.text("Break complete")
+                    content.body = L10n.text("Click the circle to start the next focus session.")
                 } else if let rest = store.active, rest.isBreak {
-                    content.title = "Break started"
-                    content.body = rest.displayTitle + " · " + TimeText.duration(rest.targetSeconds) + ". The timer has started."
+                    content.title = L10n.text("Break started")
+                    content.body = rest.displayTitle + " · " + TimeText.duration(rest.targetSeconds) + L10n.text(". The timer has started.")
                 } else {
-                    content.body += "\nNext: " + store.pomodoroPhase.title.lowercased() + ". Click the circle when you're ready."
+                    content.body += L10n.text("\nNext: ") + store.pomodoroPhase.title.lowercased() + L10n.text(". Click the circle when you're ready.")
                 }
             }
             UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "rhythm-timer-complete", content: content, trigger: nil))
@@ -335,8 +347,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
     private func notifyIdleReview(_ review: IdleReview) {
         guard store.ledger.preferences.notificationsEnabled else { return }
         let content = UNMutableNotificationContent()
-        content.title = "Review Idle Time"
-        content.body = TimeText.duration(review.duration(at: Date())) + " idle. Choose whether to count this time as work."
+        content.title = L10n.text("Review Idle Time")
+        content.body = TimeText.duration(review.duration(at: Date())) + L10n.text(" idle. Choose whether to count this time as work.")
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "rhythm-idle-review", content: content, trigger: nil))
     }
 
