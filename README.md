@@ -2,11 +2,11 @@
 
 A menu bar timer and daily planner for macOS. Requires macOS 14 or later and a Mac with Apple Silicon.
 
-**[Download time_ for Mac](https://github.com/dd0d/time_/releases/latest/download/time_-macOS-arm64.zip)** · [Release notes and SHA-256](https://github.com/dd0d/time_/releases/latest)
+**[Download time_ for Mac (.dmg)](https://github.com/dd0d/time_/releases/latest/download/time_-macOS-arm64.dmg)** · [ZIP](https://github.com/dd0d/time_/releases/latest/download/time_-macOS-arm64.zip) · [Release notes and SHA-256](https://github.com/dd0d/time_/releases/latest)
 
 ## Install
 
-1. Unzip the download and move `time_.app` to Applications.
+1. Open the disk image and drag `time_` to `Applications`. If you downloaded the ZIP, unzip it and move the app to Applications.
 2. Open time_. Click the circle in the menu bar or press **Control-Option-Space** to open the panel.
 
 The app has an ad hoc signature and is not notarized. If macOS blocks it as an app from an unidentified developer, you can build it locally. If you trust the downloaded copy, Apple documents how to approve it in [Privacy & Security](https://support.apple.com/en-us/102445).

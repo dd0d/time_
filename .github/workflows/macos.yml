@@ -29,11 +29,17 @@ jobs:
       - name: Build macOS app
         run: zsh Scripts/build.sh
 
+      - name: Build disk image
+        run: zsh Scripts/make-dmg.sh
+
       - name: Verify release archive
         working-directory: dist
         run: |
           unzip -tq time_-macOS-arm64.zip
           shasum -a 256 -c time_-macOS-arm64.zip.sha256
+          hdiutil verify -quiet time_-macOS-arm64.dmg
+          codesign --verify time_-macOS-arm64.dmg
+          shasum -a 256 -c time_-macOS-arm64.dmg.sha256
 
       - name: Upload release files
         if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
@@ -41,6 +47,8 @@ jobs:
         with:
           name: time_-macOS-arm64
           path: |
+            dist/time_-macOS-arm64.dmg
+            dist/time_-macOS-arm64.dmg.sha256
             dist/time_-macOS-arm64.zip
             dist/time_-macOS-arm64.zip.sha256
           if-no-files-found: error
