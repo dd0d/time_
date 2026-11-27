@@ -10,26 +10,26 @@ struct SettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             VStack(alignment: .leading, spacing: 9) {
-                Text("ОФОРМЛЕНИЕ").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-                AppSegments(selection: $store.ledger.preferences.appearance, options: ["system", "light", "dark"], title: { $0 == "system" ? "Система" : $0 == "light" ? "Светлое" : "Тёмное" })
+                Text("APPEARANCE").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                AppSegments(selection: $store.ledger.preferences.appearance, options: ["system", "light", "dark"], title: { $0 == "system" ? "System" : $0 == "light" ? "Light" : "Dark" })
                     .onChange(of: store.ledger.preferences.appearance) { _, _ in store.save() }
             }
             glassSettings
             menuBarSettings
             accentSettings
             VStack(alignment: .leading, spacing: 10) {
-                Text("КОМПАКТНОЕ МЕНЮ").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-                settingToggle("Анимация логотипа", symbol: "arrow.triangle.2.circlepath", binding: preference(\.animateLogo))
-                Text("Логотип вращается при отсчёте и сжимается при нажатии. Этот переключатель управляет анимацией в time_, в том числе при уменьшении движения в macOS.")
+                Text("COMPACT PANEL").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                settingToggle("Animate logo", symbol: "arrow.triangle.2.circlepath", binding: preference(\.animateLogo))
+                Text("Controls logo motion, including when Reduce Motion is enabled in macOS.")
                     .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             pomodoroSettings
             idleSettings
             VStack(spacing: 14) {
-                settingToggle("Звук завершения", symbol: "speaker.wave.2", binding: preference(\.soundEnabled))
-                settingToggle("Уведомление о таймере", symbol: "bell", binding: preference(\.notificationsEnabled))
-                settingToggle("Пауза при блокировке", symbol: "lock", binding: preference(\.pauseOnLock))
-                settingToggle("Запускать при входе", symbol: "sunrise", binding: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
+                settingToggle("Completion sound", symbol: "speaker.wave.2", binding: preference(\.soundEnabled))
+                settingToggle("Timer notifications", symbol: "bell", binding: preference(\.notificationsEnabled))
+                settingToggle("Pause on lock", symbol: "lock", binding: preference(\.pauseOnLock))
+                settingToggle("Open at login", symbol: "sunrise", binding: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
             }
             .cardSurface(padding: 14)
 
@@ -37,15 +37,15 @@ struct SettingsView: View {
                 Text(loginError).font(.system(size: 10)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
             }
             if SMAppService.mainApp.status == .requiresApproval {
-                Button("Разрешить запуск в системных настройках…") { SMAppService.openSystemSettingsLoginItems() }.font(.system(size: 11))
+                Button("Allow in System Settings…") { SMAppService.openSystemSettingsLoginItems() }.font(.system(size: 11))
             }
-            Text("Во время сна Mac отсчёт ставится на паузу. После пробуждения продолжите его вручную.")
+            Text("The timer pauses when your Mac sleeps. Resume it manually after waking.")
                 .font(.system(size: 10)).foregroundStyle(.secondary).lineSpacing(3)
             VStack(alignment: .leading, spacing: 10) {
-                Text("ДАННЫЕ").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-                Button("Экспортировать историю в CSV…") { store.exportCSV() }
-                Button("Сохранить резервную копию…") { store.exportBackup() }
-                Button("Открыть папку данных") {
+                Text("DATA").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Button("Export History as CSV…") { store.exportCSV() }
+                Button("Save Backup…") { store.exportBackup() }
+                Button("Open Data Folder") {
                     let directory = store.file.url.deletingLastPathComponent()
                     try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                     NSWorkspace.shared.open(directory)
@@ -54,9 +54,11 @@ struct SettingsView: View {
             .font(.system(size: 11))
             HStack {
                 RhythmMark(size: 14).foregroundStyle(.tertiary)
-                Text("time_ 1.5.2").font(.system(size: 10)).foregroundStyle(.tertiary)
+                if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
+                    Text("time_ \(version)").font(.system(size: 10)).foregroundStyle(.tertiary)
+                }
                 Spacer()
-                Text("Только на вашем Mac").font(.system(size: 10)).foregroundStyle(.tertiary)
+                Text("Stored on this Mac").font(.system(size: 10)).foregroundStyle(.tertiary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -66,18 +68,18 @@ struct SettingsView: View {
     private var glassSettings: some View {
         VStack(alignment: .leading, spacing: 13) {
             HStack {
-                Text("ПРОЗРАЧНОСТЬ МЕНЮ").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text("PANEL TRANSPARENCY").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
                 Spacer()
-                Button("По умолчанию") {
+                Button("Reset") {
                     store.ledger.preferences.backgroundOpacity = GlassStyle.defaultOpacity
                     store.ledger.preferences.backgroundBlur = GlassStyle.defaultBlur
                     store.save()
                 }
                 .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(store.accentColor)
             }
-            glassSlider("Непрозрачность фона", value: $store.ledger.preferences.backgroundOpacity)
-            glassSlider("Размытие", value: $store.ledger.preferences.backgroundBlur)
-            Text("Меняется только фон. Текст и кнопки остаются чёткими.")
+            glassSlider("Background opacity", value: $store.ledger.preferences.backgroundOpacity)
+            glassSlider("Blur", value: $store.ledger.preferences.backgroundBlur)
+            Text("Applies to the panel background.")
                 .font(.system(size: 10)).foregroundStyle(.tertiary).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -96,32 +98,32 @@ struct SettingsView: View {
 
     private var menuBarSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("СТРОКА МЕНЮ").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-            settingToggle("Показывать время", symbol: "clock", binding: preference(\.showMenuBarTime))
+            Text("MENU BAR").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            settingToggle("Show time", symbol: "clock", binding: preference(\.showMenuBarTime))
             HStack {
-                Text("Значок").font(.system(size: 12)).foregroundStyle(.secondary)
+                Text("Icon").font(.system(size: 12)).foregroundStyle(.secondary)
                 Spacer()
-                SelectionDropdown(selection: $store.ledger.preferences.menuBarIcon, options: MenuBarIcon.allCases, title: { $0.title }, accessibilityTitle: "Значок в строке меню")
+                SelectionDropdown(selection: $store.ledger.preferences.menuBarIcon, options: MenuBarIcon.allCases, title: { $0.title }, accessibilityTitle: "Menu bar icon")
                     .frame(width: 140).onChange(of: store.ledger.preferences.menuBarIcon) { _, _ in store.save() }
             }
-            Text("Время отображается во время активной сессии.").font(.system(size: 10)).foregroundStyle(.tertiary)
+            Text("Show the timer during an active session.").font(.system(size: 10)).foregroundStyle(.tertiary)
         }
     }
 
     private var accentSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("АКЦЕНТНЫЙ ЦВЕТ").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            Text("ACCENT COLOR").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
             HStack {
                 Button {
                     store.ledger.preferences.accentChoice = .system
                     store.save()
                 } label: {
-                    Label("Системный", systemImage: store.ledger.preferences.accentChoice == .system ? "checkmark.circle.fill" : "circle")
+                    Label("System", systemImage: store.ledger.preferences.accentChoice == .system ? "checkmark.circle.fill" : "circle")
                 }
                 .buttonStyle(.plain).font(.system(size: 12))
                 .foregroundStyle(store.ledger.preferences.accentChoice == .system ? store.accentColor : .secondary)
                 Spacer()
-                ColorPicker("Свой цвет", selection: Binding(get: { store.accentColor }, set: { store.setCustomAccent($0) }), supportsOpacity: false)
+                ColorPicker("Custom color", selection: Binding(get: { store.accentColor }, set: { store.setCustomAccent($0) }), supportsOpacity: false)
                     .font(.system(size: 11)).fixedSize()
             }
             HStack(spacing: 12) {
@@ -147,31 +149,31 @@ struct SettingsView: View {
 
     private var pomodoroSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("ПОМОДОРО").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-            pomodoroStepper("Фокус", value: $store.ledger.preferences.pomodoro.focusMinutes, range: 1...120, suffix: "мин")
-            pomodoroStepper("Короткий перерыв", value: $store.ledger.preferences.pomodoro.shortBreakMinutes, range: 1...30, suffix: "мин")
-            pomodoroStepper("Длинный перерыв", value: $store.ledger.preferences.pomodoro.longBreakMinutes, range: 1...60, suffix: "мин")
-            pomodoroStepper("До длинного перерыва", value: $store.ledger.preferences.pomodoro.roundsBeforeLongBreak, range: 2...8, suffix: "сессии")
-            settingToggle("Автоматически начинать отдых", symbol: "cup.and.saucer", binding: Binding(get: { store.ledger.preferences.pomodoro.autoStartBreaks }, set: {
+            Text("POMODORO").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            pomodoroStepper("Focus", value: $store.ledger.preferences.pomodoro.focusMinutes, range: 1...120, suffix: "min")
+            pomodoroStepper("Short break", value: $store.ledger.preferences.pomodoro.shortBreakMinutes, range: 1...30, suffix: "min")
+            pomodoroStepper("Long break", value: $store.ledger.preferences.pomodoro.longBreakMinutes, range: 1...60, suffix: "min")
+            pomodoroStepper("Until long break", value: $store.ledger.preferences.pomodoro.roundsBeforeLongBreak, range: 2...8, suffix: "sessions")
+            settingToggle("Auto-start breaks", symbol: "cup.and.saucer", binding: Binding(get: { store.ledger.preferences.pomodoro.autoStartBreaks }, set: {
                 store.ledger.preferences.pomodoro.autoStartBreaks = $0; store.save()
             }))
-            settingToggle("Свечение по краям во время отдыха", symbol: "light.beacon.min", binding: preference(\.breakEdgeGlowEnabled))
+            settingToggle("Edge glow during breaks", symbol: "light.beacon.min", binding: preference(\.breakEdgeGlowEnabled))
             if store.ledger.preferences.breakEdgeGlowEnabled { glowSettings }
-            Text("Следующий фокус всегда запускаете вы. Начало и конец отдыха видны в компактном меню и уведомлениях. Перерывы не входят в рабочее время.")
+            Text("Start each focus session manually. Breaks are excluded from work totals.")
                 .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var glowSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            glowSlider("Ширина", value: $store.ledger.preferences.glowWidth, range: 24...320, display: "\(Int(store.ledger.preferences.glowWidth.rounded())) пт")
-            glowSlider("Яркость", value: $store.ledger.preferences.glowIntensity, range: 0...1, display: "\(Int((store.ledger.preferences.glowIntensity * 100).rounded()))%")
+            glowSlider("Width", value: $store.ledger.preferences.glowWidth, range: 24...320, display: "\(Int(store.ledger.preferences.glowWidth.rounded())) pt")
+            glowSlider("Intensity", value: $store.ledger.preferences.glowIntensity, range: 0...1, display: "\(Int((store.ledger.preferences.glowIntensity * 100).rounded()))%")
             HStack {
-                Button(store.isGlowPreviewing ? "Остановить предпросмотр" : "Показать свечение") {
+                Button(store.isGlowPreviewing ? "Stop Preview" : "Preview Glow") {
                     if store.isGlowPreviewing { store.stopGlowPreview() } else { store.showGlowPreview() }
                 }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(store.accentColor)
                 Spacer()
-                Button("Сбросить") {
+                Button("Reset") {
                     store.ledger.preferences.glowWidth = GlowStyle.defaultWidth
                     store.ledger.preferences.glowIntensity = GlowStyle.defaultIntensity
                     store.save()
@@ -188,7 +190,7 @@ struct SettingsView: View {
                 Spacer()
                 Text(display).font(.system(size: 10)).monospacedDigit().foregroundStyle(.secondary)
             }
-            AccentSlider(value: value, range: range, accessibilityTitle: "Свечение: " + title, onEditingChanged: { editing in
+            AccentSlider(value: value, range: range, accessibilityTitle: "Glow: " + title, onEditingChanged: { editing in
                 store.showGlowPreview()
                 if !editing { store.save() }
             })
@@ -197,16 +199,16 @@ struct SettingsView: View {
 
     private var idleSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("ПРОВЕРКА ПРОСТОЯ").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-            settingToggle("Замечать отсутствие активности", symbol: "moon.zzz", binding: preference(\.idleCheckEnabled))
+            Text("IDLE DETECTION").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            settingToggle("Detect idle time", symbol: "moon.zzz", binding: preference(\.idleCheckEnabled))
             HStack {
-                Text("После").font(.system(size: 11))
+                Text("After").font(.system(size: 11))
                 Spacer()
-                SelectionDropdown(selection: $store.ledger.preferences.idleMinutes, options: [1, 3, 5, 10, 15, 30], title: { "\($0) мин" }, accessibilityTitle: "Порог простоя")
+                SelectionDropdown(selection: $store.ledger.preferences.idleMinutes, options: [1, 3, 5, 10, 15, 30], title: { "\($0) min" }, accessibilityTitle: "Idle threshold")
                     .frame(width: 110).disabled(!store.ledger.preferences.idleCheckEnabled)
                     .onChange(of: store.ledger.preferences.idleMinutes) { _, _ in store.save() }
             }
-            Text("Таймер встанет на паузу. После возвращения выберите, исключить простой или засчитать его. При чтении и размышлении время можно оставить.")
+            Text("The timer pauses when you're idle. Choose whether that time counts when you return.")
                 .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -248,7 +250,7 @@ struct SettingsView: View {
             loginError = nil
         } catch {
             launchAtLogin = SMAppService.mainApp.status == .enabled
-            loginError = "Переместите time_ в «Программы» и попробуйте ещё раз: \(error.localizedDescription)"
+            loginError = "Move time_ to Applications and try again: \(error.localizedDescription)"
         }
     }
 }
@@ -275,7 +277,7 @@ struct CategoriesView: View {
                                     Circle().fill(category.color.tint).frame(width: 9, height: 9)
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(category.name).font(.system(size: 12, weight: .medium)).foregroundStyle(.primary)
-                                        Text(category.dailyGoalMinutes == 0 ? "План из задач" : TimeText.duration(Double(category.dailyGoalMinutes * 60)) + " в день")
+                                        Text(category.dailyGoalMinutes == 0 ? "Based on tasks" : TimeText.duration(Double(category.dailyGoalMinutes * 60)) + " per day")
                                             .font(.system(size: 10)).foregroundStyle(.secondary)
                                     }
                                     Spacer()
@@ -288,12 +290,12 @@ struct CategoriesView: View {
                 }
                 Button {
                     editingID = nil; name = ""; color = .lavender; goal = 0; isEditing = true
-                } label: { Label("Новая категория", systemImage: "plus") }.buttonStyle(PrimaryButton())
+                } label: { Label("New Category", systemImage: "plus") }.buttonStyle(PrimaryButton())
                 let archived = store.ledger.categories.filter(\.isArchived)
                 if !archived.isEmpty {
                     CategoryArchiveMenu(categories: archived)
                 }
-                Text("Если цель равна нулю, план считается по оценкам задач.")
+                Text("Set the goal to zero to use task estimates.")
                     .font(.system(size: 10)).foregroundStyle(.secondary).lineSpacing(3)
             }
         }
@@ -303,8 +305,8 @@ struct CategoriesView: View {
     private var editor: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
-                Text("Название").font(.system(size: 11)).foregroundStyle(.secondary)
-                TextField("Например, свой проект", text: $name).textFieldStyle(.roundedBorder)
+                Text("Name").font(.system(size: 11)).foregroundStyle(.secondary)
+                TextField("For example, a project", text: $name).textFieldStyle(.roundedBorder)
             }
             HStack(spacing: 13) {
                 ForEach(CategoryColor.allCases, id: \.self) { candidate in
@@ -317,14 +319,14 @@ struct CategoriesView: View {
                 }
             }
             HStack {
-                Text("Цель на день").font(.system(size: 12)).foregroundStyle(.secondary)
+                Text("Daily goal").font(.system(size: 12)).foregroundStyle(.secondary)
                 Spacer()
-                TextField("Минуты", value: $goal, format: .number).textFieldStyle(.roundedBorder).frame(width: 55)
-                Text("мин").font(.system(size: 11)).foregroundStyle(.secondary)
-                Stepper("Цель на день", value: $goal, in: 0...1440, step: 15).labelsHidden()
+                TextField("Minutes", value: $goal, format: .number).textFieldStyle(.roundedBorder).frame(width: 55)
+                Text("min").font(.system(size: 11)).foregroundStyle(.secondary)
+                Stepper("Daily goal", value: $goal, in: 0...1440, step: 15).labelsHidden()
             }
-            Text("При нуле план считается по оценкам задач.").font(.system(size: 10)).foregroundStyle(.tertiary)
-            Button(editingID == nil ? "Создать категорию" : "Сохранить") {
+            Text("Zero uses task estimates.").font(.system(size: 10)).foregroundStyle(.tertiary)
+            Button(editingID == nil ? "Create Category" : "Save") {
                 let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !clean.isEmpty else { return }
                 if let id = editingID, var category = store.ledger.category(id) {
@@ -336,10 +338,10 @@ struct CategoriesView: View {
             .buttonStyle(PrimaryButton()).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .keyboardShortcut(.return, modifiers: .command)
             HStack {
-                Button("Назад") { isEditing = false }.font(.system(size: 11))
+                Button("Back") { isEditing = false }.font(.system(size: 11))
                 Spacer()
                 if let id = editingID {
-                    Button("В архив") { store.archiveCategory(id); isEditing = false }
+                    Button("Archive") { store.archiveCategory(id); isEditing = false }
                         .font(.system(size: 11)).foregroundStyle(.secondary)
                         .disabled(store.categories.count <= 1 || store.active?.categoryID == id)
                 }
@@ -349,12 +351,12 @@ struct CategoriesView: View {
 
     private func colorName(_ color: CategoryColor) -> String {
         switch color {
-        case .mint: return "Мятный"
-        case .blue: return "Голубой"
-        case .lavender: return "Лавандовый"
-        case .peach: return "Персиковый"
-        case .rose: return "Розовый"
-        case .yellow: return "Жёлтый"
+        case .mint: return "Mint"
+        case .blue: return "Light blue"
+        case .lavender: return "Lavender"
+        case .peach: return "Peach"
+        case .rose: return "Pink"
+        case .yellow: return "Yellow"
         }
     }
 }
@@ -367,7 +369,7 @@ private struct CategoryArchiveMenu: View {
     var body: some View {
         Button { expanded.toggle() } label: {
             HStack(spacing: 7) {
-                Text("Архив · \(categories.count)").font(.system(size: 11))
+                Text("Archive · \(categories.count)").font(.system(size: 11))
                 Spacer()
                 Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
             }
@@ -376,10 +378,10 @@ private struct CategoryArchiveMenu: View {
             .background(.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 7))
             .contentShape(RoundedRectangle(cornerRadius: 7))
         }
-        .buttonStyle(.plain).accessibilityLabel("Архив категорий: \(categories.count)")
+        .buttonStyle(.plain).accessibilityLabel("Archived categories: \(categories.count)")
         .popover(isPresented: $expanded, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 7) {
-                Text("АРХИВ КАТЕГОРИЙ").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text("ARCHIVED CATEGORIES").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
                     .padding(.horizontal, 9).padding(.top, 5)
                 ScrollView {
                     VStack(spacing: 3) {
@@ -398,7 +400,7 @@ private struct CategoryArchiveMenu: View {
                                 .foregroundStyle(.primary).padding(.horizontal, 9).frame(minHeight: 32)
                                 .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain).accessibilityLabel("Вернуть «\(category.name)»")
+                            .buttonStyle(.plain).accessibilityLabel("Restore \(category.name)")
                         }
                     }
                 }.frame(height: min(280, CGFloat(categories.count) * 35 - 3))

@@ -4,7 +4,7 @@ import RhythmCore
 import UniformTypeIdentifiers
 
 enum AppPage: String, CaseIterable {
-    case focus = "Компактно", session = "Фокус", plan = "План", summary = "История", analytics = "Аналитика", categories = "Категории", settings = "Настройки", idleReview = "Проверка простоя"
+    case focus = "Compact", session = "Focus", plan = "Plan", summary = "History", analytics = "Analytics", categories = "Categories", settings = "Settings", idleReview = "Idle detection"
     var symbol: String {
         switch self {
         case .focus, .session: return "circle.dotted.circle"
@@ -112,13 +112,13 @@ final class AppStore: ObservableObject {
         return completed % rounds + 1
     }
     var phaseCaption: String {
-        if let pendingIdle { return "Простой " + TimeText.duration(pendingIdle.duration(at: now)) }
-        if let active, active.isPaused { return "На паузе" }
+        if let pendingIdle { return "Idle time " + TimeText.duration(pendingIdle.duration(at: now)) }
+        if let active, active.isPaused { return "Paused" }
         if (active?.mode ?? mode) == .pomodoro {
-            return (pomodoroPhase.isBreak ? "Отдых" : "Фокус") + " \(pomodoroRound)/\(ledger.preferences.pomodoro.roundsBeforeLongBreak)"
+            return (pomodoroPhase.isBreak ? "Break" : "Focus") + " \(pomodoroRound)/\(ledger.preferences.pomodoro.roundsBeforeLongBreak)"
         }
-        if active?.isRunning == true { return "В фокусе" }
-        return mode == .countdown ? "Таймер" : "Секундомер"
+        if active?.isRunning == true { return "Focusing" }
+        return mode == .countdown ? "Timer" : "Stopwatch"
     }
 
     init(dataURL: URL? = nil, idleTimeProvider: @escaping () -> TimeInterval = SystemActivity.idleSeconds) {
@@ -137,7 +137,7 @@ final class AppStore: ObservableObject {
             } else if let backup = try file.loadBackup() {
                 initial = backup.ledger
                 initial.recoverAfterRelaunch(lastCheckpoint: backup.savedAt, at: Date())
-                errorMessage = "Основной файл отсутствует. Данные восстановлены из резервной копии."
+                errorMessage = "Data restored from backup because the main file was missing."
             }
         } catch {
             // Preserve the original before attempting to restore a recovery copy.
@@ -147,17 +147,17 @@ final class AppStore: ObservableObject {
                 if let backup = try file.loadBackup() {
                     initial = backup.ledger
                     initial.recoverAfterRelaunch(lastCheckpoint: backup.savedAt, at: Date())
-                    errorMessage = "Данные восстановлены из резервной копии. Исходный файл сохранён рядом."
+                    errorMessage = "Data restored from backup. The original file was kept."
                 } else {
                     blocked = true
-                    errorMessage = "Не удалось прочитать данные. Исходный файл сохранён; откройте папку данных в настройках."
+                    errorMessage = "Could not read your data. The original file was kept. Open the data folder in Settings."
                 }
             } catch {
                 blocked = true
-                errorMessage = "Нет доступа к файлу данных. Проверьте папку данных в настройках."
+                errorMessage = "Could not access your data file. Check the data folder in Settings."
             }
         }
-        if initial.visibleCategories.isEmpty { initial.categories.append(TimeCategory(name: "Личное", color: .mint)) }
+        if initial.visibleCategories.isEmpty { initial.categories.append(TimeCategory(name: "Personal", color: .mint)) }
         let createdDailyTasks = initial.materializeDailyTasks(on: Date())
         ledger = initial
         selectedCategoryID = initial.preferences.lastCategoryID.flatMap { id in initial.visibleCategories.first { $0.id == id }?.id } ?? initial.visibleCategories[0].id
@@ -464,7 +464,7 @@ final class AppStore: ObservableObject {
                 case .failure(let error):
                     self.lastScheduledLedger = nil
                     self.saveFailed = true
-                    self.storageError = "Не удалось сохранить изменения: \(error.localizedDescription)"
+                    self.storageError = "Could not save changes: \(error.localizedDescription)"
                 }
             }
         }
@@ -590,22 +590,22 @@ final class AppStore: ObservableObject {
     func exportCSV() {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.commaSeparatedText]
-        panel.nameFieldStringValue = "time_ история.csv"
+        panel.nameFieldStringValue = "time_ history.csv"
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do { try CSVExport.sessions(ledger.sessions, categories: ledger.categories).write(to: url, atomically: true, encoding: .utf8) }
-        catch { storageError = "Не удалось экспортировать: \(error.localizedDescription)" }
+        catch { storageError = "Could not export: \(error.localizedDescription)" }
     }
 
     func exportBackup() {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.json]
-        panel.nameFieldStringValue = "time_ резервная копия.json"
+        panel.nameFieldStringValue = "time_ backup.json"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             try encoder.encode(LedgerEnvelope(savedAt: Date(), ledger: ledger)).write(to: url, options: .atomic)
-        } catch { storageError = "Не удалось создать копию: \(error.localizedDescription)" }
+        } catch { storageError = "Could not create backup: \(error.localizedDescription)" }
     }
 }

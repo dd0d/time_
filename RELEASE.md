@@ -1,33 +1,24 @@
-# Выпуск time_ 1.6.2
+# time_ 1.7.0
 
-- Дневной итог в «Истории» использует начертание и цифры таймера.
-- Значок быстрого старта пружинит при отпускании, показывает акцентное кольцо при запуске и замирает на паузе.
-- В плане есть разовые и ежедневные задачи с необязательной целью по времени.
-- Сокращены подсказки и тексты пустых экранов.
+## GitHub release description
 
-Требования: macOS 14 или новее, Mac с Apple Silicon. Приложение работает локально и запускается в строке меню.
+time_ now uses English for the interface, notifications, and CSV headings. Existing tasks, category names, and history are preserved.
 
-## Подготовка репозитория
+Requires macOS 14 or later and a Mac with Apple Silicon.
 
-Для первого импорта используйте чистый архив исходников или файлы текущего проекта с учётом `.gitignore`. В репозиторий входят исходники, тесты, ресурсы, скрипты и `.github/workflows/macos.yml`. Данные приложения, локальные прогоны и сборки исключены.
+Download `time_-macOS-arm64.zip`, unzip it, and move `time_.app` to Applications. The app is ad hoc signed and is not notarized. See the [install instructions](https://github.com/dd0d/time_/blob/v1.7.0/README.md#install) for the first launch.
 
-Для нового репозитория запустите команды из распакованной папки `time_`. Замените адрес `origin` на адрес своего пустого репозитория GitHub.
+## Publish
+
+1. Push the release commit and tag `v1.7.0`. Match the tag to `CFBundleShortVersionString` in `Resources/Info.plist`.
+2. Use the ZIP and SHA-256 from the GitHub Actions run or build them locally with `zsh Scripts/build.sh`.
+3. Create a release for `v1.7.0`. Use `time_ 1.7.0` as the title and copy the description above. Attach both files before publishing.
+4. Set it as the latest release to update the download link in README.
+
+Keep the asset name `time_-macOS-arm64.zip` for future releases. GitHub uses it to resolve the [latest-release download URL](https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases).
 
 ```sh
-git init -b main
-git add .
-git commit -m "Prepare time_ 1.6.2 for release"
-git remote add origin https://github.com/OWNER/REPO.git
-git push -u origin main
+shasum -a 256 -c time_-macOS-arm64.zip.sha256
 ```
 
-## Подготовка GitHub Release
-
-1. Сверьте `CFBundleShortVersionString` в `Resources/Info.plist` с тегом `v1.6.2`. На коммите выпуска выполните `git tag v1.6.2` и `git push origin v1.6.2`.
-2. Дождитесь зелёной проверки **macOS**. Запуск по тегу прикрепляет ZIP и файл SHA-256 к результату работы. Те же файлы создаёт `zsh Scripts/build.sh` в `dist`.
-3. Создайте черновик в **Releases → Draft a new release**. Выберите тег `v1.6.2`, укажите название `time_ 1.6.2` и перенесите список изменений выше.
-4. Приложите `time_-macOS-arm64.zip` и `time_-macOS-arm64.zip.sha256`. Проверьте ZIP на Mac с Apple Silicon перед публикацией.
-
-Для проверки целостности запустите `shasum -a 256 -c time_-macOS-arm64.zip.sha256` из папки, где находятся оба файла.
-
-Текущий пакет использует локальную подпись (ad hoc). Для распространения с проверкой Gatekeeper нужна подпись Developer ID Application и нотариальное заверение Apple. См. [руководство Apple](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution).
+The checksum verifies the ZIP against the published checksum file. It does not identify the developer. The app bundle is signed ad hoc during the build.

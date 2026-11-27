@@ -55,8 +55,8 @@ final class PomodoroTests: XCTestCase {
         let ledger = Ledger(activeSession: pause)
         XCTAssertEqual(ledger.total(on: origin, at: origin.addingTimeInterval(60)), 0)
         XCTAssertEqual(CSVExport.sessions([pause], categories: []).split(separator: "\n").count, 1)
-        XCTAssertEqual(pause.displayTitle, "Короткий перерыв")
-        XCTAssertEqual(WorkSession(title: "  ", categoryID: category, mode: .stopwatch, startedAt: origin).displayTitle, "Фокус")
+        XCTAssertEqual(pause.displayTitle, "Short break")
+        XCTAssertEqual(WorkSession(title: "  ", categoryID: category, mode: .stopwatch, startedAt: origin).displayTitle, "Focus")
     }
 
     func testVersion12LedgerLoadsWithoutPomodoroFields() throws {

@@ -11,7 +11,7 @@ swift build -c release --product Rhythm --disable-sandbox \
     -Xswiftc -module-cache-path -Xswiftc "$PWD/.build/module-cache"
 
 if [[ "$(lipo -archs .build/release/Rhythm)" != arm64 ]]; then
-    print -u2 "Сборка time_ для релиза требует Apple Silicon (arm64)."
+    print -u2 "Building a time_ release requires Apple Silicon (arm64)."
     exit 1
 fi
 
@@ -24,4 +24,4 @@ codesign --force --sign - --identifier software.rhythm.mac --options runtime --t
 codesign --verify --deep --strict "$bundle"
 ditto -c -k --sequesterRsrc --keepParent "$bundle" "$PWD/dist/time_-macOS-arm64.zip"
 (cd dist && shasum -a 256 time_-macOS-arm64.zip > time_-macOS-arm64.zip.sha256)
-print "Готово: $bundle"
+print "Built $bundle"

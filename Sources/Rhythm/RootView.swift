@@ -36,7 +36,7 @@ struct RootView: View {
 private struct CompactMenuView: View {
     @EnvironmentObject var store: AppStore
     @State private var iconHovered = false
-    private var orbAction: String { store.pendingIdle != nil ? "Разобрать простой" : (store.active.map { $0.isRunning ? "Пауза" : "Продолжить" } ?? "Быстрый старт") }
+    private var orbAction: String { store.pendingIdle != nil ? "Review Idle Time" : (store.active.map { $0.isRunning ? "Pause" : "Resume" } ?? "Quick Start") }
 
     private var time: String {
         if let active = store.active {
@@ -60,7 +60,7 @@ private struct CompactMenuView: View {
                         Text(time).font(.system(size: time.count > 5 ? 22 : 26, weight: .semibold)).monospacedDigit().tracking(-0.8)
                             .foregroundStyle(store.active?.isPaused == true ? Color.secondary : Color.primary)
                     }
-                    .buttonStyle(.plain).accessibilityLabel("Время " + time + ". Режим и длительность")
+                    .buttonStyle(.plain).accessibilityLabel("Time " + time + ". Mode and duration")
                     Button { store.compactEditor = store.compactEditor == .details ? nil : .details } label: {
                         HStack(spacing: 4) {
                             Image(systemName: store.storageError != nil ? "exclamationmark.triangle" : "tag").font(.system(size: 10))
@@ -70,7 +70,7 @@ private struct CompactMenuView: View {
                         .foregroundStyle(store.storageError != nil ? Color.orange : store.accentColor)
                         .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain).accessibilityLabel("Задача и категория")
+                    .buttonStyle(.plain).accessibilityLabel("Task and category")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 moreMenu.padding(.top, 1)
@@ -78,55 +78,55 @@ private struct CompactMenuView: View {
             .frame(height: 50)
             HStack(spacing: 7) {
                 if store.pendingIdle != nil {
-                    Button { store.presentIdleReview() } label: { Label("Разобрать простой", systemImage: "moon.zzz").frame(maxWidth: .infinity) }
+                    Button { store.presentIdleReview() } label: { Label("Review Idle Time", systemImage: "moon.zzz").frame(maxWidth: .infinity) }
                         .buttonStyle(CompactButtonStyle())
                 } else if let active = store.active {
                     Button { store.pauseOrResume() } label: {
-                        Label(active.isRunning ? "Пауза" : "Продолжить", systemImage: active.isRunning ? "pause" : "play").frame(maxWidth: .infinity)
+                        Label(active.isRunning ? "Pause" : "Resume", systemImage: active.isRunning ? "pause" : "play").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(CompactButtonStyle()).keyboardShortcut(.return, modifiers: .command)
                     Button { store.finish() } label: { Image(systemName: "stop.fill").frame(width: 26) }
-                        .buttonStyle(CompactButtonStyle()).accessibilityLabel("Завершить и сохранить")
+                        .buttonStyle(CompactButtonStyle()).accessibilityLabel("Stop and Save")
                 } else {
                     Button {
                         if store.canStart { store.start() }
                         else { store.page = .session }
-                    } label: { Label(store.mode == .pomodoro ? (store.pomodoroPhase.isBreak ? "Начать отдых" : "Начать фокус") : "Начать", systemImage: "play.circle").frame(maxWidth: .infinity) }
+                    } label: { Label(store.mode == .pomodoro ? (store.pomodoroPhase.isBreak ? "Start Break" : "Start Focus") : "Start", systemImage: "play.circle").frame(maxWidth: .infinity) }
                     .buttonStyle(CompactButtonStyle()).keyboardShortcut(.return, modifiers: .command)
                 }
                 Button { store.page = .summary } label: { Image(systemName: "chart.bar.fill").frame(width: 26) }
-                    .buttonStyle(CompactButtonStyle()).accessibilityLabel("Открыть историю")
+                    .buttonStyle(CompactButtonStyle()).accessibilityLabel("Open History")
             }
         }
         .padding(10)
     }
 
     private var compactTitle: String {
-        if store.storageError != nil { return "Ошибка сохранения" }
+        if store.storageError != nil { return "Could not save" }
         if store.pendingIdle != nil { return store.phaseCaption }
         let name = store.active?.title ?? store.title
-        if store.active?.isBreak == true { return "Отдых · " + (store.currentCategory?.name ?? "") }
-        return name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? (store.currentCategory?.name ?? "Чем займёмся?") : name
+        if store.active?.isBreak == true { return "Break · " + (store.currentCategory?.name ?? "") }
+        return name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? (store.currentCategory?.name ?? "Choose a category") : name
     }
 
     private var moreMenu: some View {
         Menu {
-            Button("План на день…", systemImage: "checklist") { store.page = .plan }
-            Button("История…", systemImage: "chart.bar") { store.page = .summary }
+            Button("Daily Plan…", systemImage: "checklist") { store.page = .plan }
+            Button("History…", systemImage: "chart.bar") { store.page = .summary }
             Divider()
-            Button("Категории…", systemImage: "tag") { store.page = .categories }
-            Button("Настройки…", systemImage: "gearshape") { store.page = .settings }
+            Button("Categories…", systemImage: "tag") { store.page = .categories }
+            Button("Settings…", systemImage: "gearshape") { store.page = .settings }
             Divider()
-            Button(store.isPinned ? "Открепить меню" : "Закрепить меню", systemImage: store.isPinned ? "pin.slash" : "pin") {
+            Button(store.isPinned ? "Unpin Panel" : "Pin Panel", systemImage: store.isPinned ? "pin.slash" : "pin") {
                 store.isPinned.toggle(); store.onPinChanged?()
             }
             Divider()
-            Button("Завершить time_", systemImage: "power") { NSApplication.shared.terminate(nil) }
+            Button("Quit time_", systemImage: "power") { NSApplication.shared.terminate(nil) }
         } label: {
             Image(systemName: store.isPinned ? "pin.fill" : "ellipsis")
                 .font(.system(size: store.isPinned ? 11 : 15)).foregroundStyle(.secondary).frame(width: 17, height: 17)
         }
-        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().accessibilityLabel("Меню приложения")
+        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().accessibilityLabel("App menu")
     }
 }
 
@@ -213,14 +213,14 @@ private struct ExpandedMenuView: View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 if isUtility {
-                    QuietIconButton(symbol: "chevron.left", help: "Назад") { store.page = store.page == .analytics ? .summary : store.lastMainPage }
+                    QuietIconButton(symbol: "chevron.left", help: "Back") { store.page = store.page == .analytics ? .summary : store.lastMainPage }
                 } else { RhythmMark(size: 19).foregroundStyle(store.accentColor) }
                 Text(isUtility ? store.page.rawValue : "time_").font(.system(size: 14, weight: .semibold))
                 Spacer()
-                QuietIconButton(symbol: store.isPinned ? "pin.fill" : "pin", help: store.isPinned ? "Открепить меню" : "Закрепить меню", selected: store.isPinned) {
+                QuietIconButton(symbol: store.isPinned ? "pin.fill" : "pin", help: store.isPinned ? "Unpin Panel" : "Pin Panel", selected: store.isPinned) {
                     store.isPinned.toggle(); store.onPinChanged?()
                 }
-                QuietIconButton(symbol: "rectangle.compress.vertical", help: "Свернуть меню") { store.page = .focus }
+                QuietIconButton(symbol: "rectangle.compress.vertical", help: "Collapse panel") { store.page = .focus }
             }
             .padding(.horizontal, 20).padding(.top, 15).padding(.bottom, 13)
             HStack(spacing: 3) {
@@ -267,9 +267,9 @@ private struct ExpandedMenuView: View {
         VStack(spacing: 0) {
             Rectangle().fill(Palette.line(scheme)).frame(height: 0.7)
             HStack(spacing: 14) {
-                Button { store.page = .categories } label: { Label("Категории", systemImage: "tag") }
+                Button { store.page = .categories } label: { Label("Categories", systemImage: "tag") }
                     .foregroundStyle(store.page == .categories ? store.accentColor : .secondary)
-                Button { store.page = .settings } label: { Label("Настройки", systemImage: "gearshape") }
+                Button { store.page = .settings } label: { Label("Settings", systemImage: "gearshape") }
                     .foregroundStyle(store.page == .settings ? store.accentColor : .secondary)
                 Spacer(minLength: 4)
                 Text(TimeText.duration(store.totalToday)).monospacedDigit().foregroundStyle(.tertiary)
@@ -298,16 +298,16 @@ private struct ExpandedFocusView: View {
                 Button { store.presentIdleReview() } label: {
                     HStack {
                         Image(systemName: "moon.zzz")
-                        Text("Простой · " + TimeText.duration(review.duration(at: store.now)))
+                        Text("Idle time · " + TimeText.duration(review.duration(at: store.now)))
                         Spacer()
-                        Text("Разобрать").foregroundStyle(store.accentColor)
+                        Text("Review").foregroundStyle(store.accentColor)
                     }.font(.system(size: 11)).cardSurface(padding: 12)
                 }.buttonStyle(.plain)
             }
             VStack(spacing: 15) {
-                TextField("Название (необязательно)", text: $store.title, axis: .vertical)
+                TextField("Name (optional)", text: $store.title, axis: .vertical)
                     .font(.system(size: 16, weight: .medium)).textFieldStyle(.plain).lineLimit(1...2).focused($titleFocused)
-                    .accessibilityLabel("Название задачи")
+                    .accessibilityLabel("Task name")
                     .onSubmit { commit() }
                     .onChange(of: store.title) { _, value in
                         if store.active == nil, let id = store.selectedTaskID, store.ledger.tasks.first(where: { $0.id == id })?.title != value { store.clearTaskAssociation() }
@@ -316,7 +316,7 @@ private struct ExpandedFocusView: View {
                     CategoryPicker(selection: $store.selectedCategoryID)
                     Spacer()
                     if changedActiveDetails {
-                        Button("Сохранить") { store.updateSessionDetails(title: store.title, categoryID: store.selectedCategoryID) }
+                        Button("Save") { store.updateSessionDetails(title: store.title, categoryID: store.selectedCategoryID) }
                             .buttonStyle(.borderless).font(.system(size: 11))
                     }
                 }
@@ -329,34 +329,34 @@ private struct ExpandedFocusView: View {
                     if active.mode.isTimed {
                         AccentProgress(value: active.elapsed(at: store.now) / max(1, active.targetSeconds))
                         HStack {
-                            Text("Прошло " + TimeText.duration(active.elapsed(at: store.now))).font(.system(size: 10)).foregroundStyle(.secondary)
+                            Text("Elapsed " + TimeText.duration(active.elapsed(at: store.now))).font(.system(size: 10)).foregroundStyle(.secondary)
                             Spacer()
-                            if active.mode == .countdown { Button("+ 5 мин") { store.extendTimer() }.buttonStyle(.plain).font(.system(size: 11)) }
-                            if active.isBreak { Button("Пропустить") { store.skipPomodoroBreak() }.buttonStyle(.plain).font(.system(size: 11)) }
+                            if active.mode == .countdown { Button("+ 5 min") { store.extendTimer() }.buttonStyle(.plain).font(.system(size: 11)) }
+                            if active.isBreak { Button("Skip") { store.skipPomodoroBreak() }.buttonStyle(.plain).font(.system(size: 11)) }
                         }
                     }
                     HStack(spacing: 8) {
-                        Button { store.pauseOrResume() } label: { Label(active.isRunning ? "Пауза" : "Продолжить", systemImage: active.isRunning ? "pause.fill" : "play.fill") }
+                        Button { store.pauseOrResume() } label: { Label(active.isRunning ? "Pause" : "Resume", systemImage: active.isRunning ? "pause.fill" : "play.fill") }
                             .buttonStyle(PrimaryButton()).keyboardShortcut(.return, modifiers: .command)
                         Button { store.finish() } label: { Image(systemName: "stop.fill").frame(width: 42, height: 42) }
                             .buttonStyle(.borderless).background(.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
-                            .accessibilityLabel(active.isBreak ? "Завершить перерыв" : "Завершить и сохранить")
+                            .accessibilityLabel(active.isBreak ? "End break" : "Stop and Save")
                     }
                 } else {
-                    AppSegments(selection: $store.mode, options: TrackingMode.allCases, title: { $0.title }).accessibilityLabel("Режим")
+                    AppSegments(selection: $store.mode, options: TrackingMode.allCases, title: { $0.title }).accessibilityLabel("Mode")
                     if store.mode == .countdown {
                         HStack(spacing: 6) {
                             ForEach([25, 45, 60], id: \.self) { minutes in
-                                Button("\(minutes) мин") { store.minutes = minutes }
+                                Button("\(minutes) min") { store.minutes = minutes }
                                     .foregroundStyle(store.minutes == minutes ? store.accentColor : .secondary)
                             }
                             Spacer(minLength: 1)
-                            TextField("Минуты", value: $store.minutes, format: .number).textFieldStyle(.roundedBorder).frame(width: 37)
-                            Stepper("Минуты", value: $store.minutes, in: 1...480).labelsHidden()
+                            TextField("Minutes", value: $store.minutes, format: .number).textFieldStyle(.roundedBorder).frame(width: 37)
+                            Stepper("Minutes", value: $store.minutes, in: 1...480).labelsHidden()
                         }.font(.system(size: 10)).controlSize(.small)
                     }
                     if store.mode == .pomodoro { pomodoroSummary }
-                    Button(action: commit) { Label(store.mode == .pomodoro ? (store.pomodoroPhase.isBreak ? "Начать отдых" : "Начать фокус") : "Начать", systemImage: "play.fill") }
+                    Button(action: commit) { Label(store.mode == .pomodoro ? (store.pomodoroPhase.isBreak ? "Start Break" : "Start Focus") : "Start", systemImage: "play.fill") }
                         .buttonStyle(PrimaryButton()).keyboardShortcut(.return, modifiers: .command).disabled(!store.canStart)
                 }
             }
@@ -364,14 +364,14 @@ private struct ExpandedFocusView: View {
             if let completed = store.lastCompleted, store.active == nil {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(store.accentColor)
-                    Text((completed.isBreak ? "Перерыв завершён · " : "Сохранено · ") + TimeText.duration(completed.elapsed(at: completed.endedAt ?? store.now)))
+                    Text((completed.isBreak ? "Break ended · " : "Saved · ") + TimeText.duration(completed.elapsed(at: completed.endedAt ?? store.now)))
                         .font(.system(size: 11)).foregroundStyle(.secondary)
                     Spacer()
-                    QuietIconButton(symbol: "xmark", help: "Скрыть") { store.lastCompleted = nil }
+                    QuietIconButton(symbol: "xmark", help: "Dismiss") { store.lastCompleted = nil }
                 }
             }
             VStack(spacing: 13) {
-                SectionCaption(title: "СЕГОДНЯ", trailing: TimeText.duration(store.totalToday))
+                SectionCaption(title: "TODAY", trailing: TimeText.duration(store.totalToday))
                 ForEach(store.categories) { category in CategoryProgress(category: category, day: store.now) }
             }
         }
@@ -393,16 +393,16 @@ private struct ExpandedFocusView: View {
                     Circle().fill(index < completed ? store.accentColor : .primary.opacity(0.1)).frame(width: 6, height: 6)
                 }
                 Spacer()
-                Text("\(settings.focusMinutes) / \(settings.shortBreakMinutes) / \(settings.longBreakMinutes) мин")
+                Text("\(settings.focusMinutes) / \(settings.shortBreakMinutes) / \(settings.longBreakMinutes) min")
                     .font(.system(size: 10)).foregroundStyle(.secondary)
             }
             HStack {
-                Text(settings.autoStartBreaks ? "Перерыв начнётся сам. Следующий фокус запустите вручную." : "Каждый этап запускается вручную.").font(.system(size: 10)).foregroundStyle(.secondary)
+                Text(settings.autoStartBreaks ? "Breaks start automatically. Start the next focus session when ready." : "Start each phase manually.").font(.system(size: 10)).foregroundStyle(.secondary)
                 Spacer(minLength: 4)
                 if store.pomodoroPhase.isBreak {
-                    Button("Пропустить") { store.skipPomodoroBreak() }.font(.system(size: 10)).buttonStyle(.plain).foregroundStyle(store.accentColor)
+                    Button("Skip") { store.skipPomodoroBreak() }.font(.system(size: 10)).buttonStyle(.plain).foregroundStyle(store.accentColor)
                 } else if completed > 0 {
-                    Button("Сначала") { store.resetPomodoro() }.font(.system(size: 10)).buttonStyle(.plain).foregroundStyle(store.accentColor)
+                    Button("Reset") { store.resetPomodoro() }.font(.system(size: 10)).buttonStyle(.plain).foregroundStyle(store.accentColor)
                 }
             }
         }
@@ -415,26 +415,26 @@ struct DayNavigation: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(store.isToday ? "Сегодня" : store.selectedDay.formatted(.dateTime.day().month(.wide)))
+                Text(store.isToday ? "Today" : store.selectedDay.formatted(.dateTime.locale(Locale(identifier: "en")).day().month(.wide)))
                     .font(.system(size: 21, weight: .semibold))
                 Text(dayCaption)
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Spacer()
             if !store.isToday {
-                Button("Сегодня") { store.selectedDay = Calendar.current.startOfDay(for: Date()) }
+                Button("Today") { store.selectedDay = Calendar.current.startOfDay(for: Date()) }
                     .font(.system(size: 10)).buttonStyle(.plain).foregroundStyle(.secondary)
             }
             HStack(spacing: 1) {
-                QuietIconButton(symbol: "chevron.left", help: "Предыдущий день") { store.changeDay(-1, allowsFuture: allowsFuture) }
-                QuietIconButton(symbol: "chevron.right", help: "Следующий день") { store.changeDay(1, allowsFuture: allowsFuture) }
+                QuietIconButton(symbol: "chevron.left", help: "Previous day") { store.changeDay(-1, allowsFuture: allowsFuture) }
+                QuietIconButton(symbol: "chevron.right", help: "Next day") { store.changeDay(1, allowsFuture: allowsFuture) }
                     .disabled(!allowsFuture && store.isToday).opacity(!allowsFuture && store.isToday ? 0.3 : 1)
             }
         }
     }
 
     private var dayCaption: String {
-        let text = store.selectedDay.formatted(.dateTime.locale(Locale(identifier: "ru_RU")).weekday(.wide).day().month(.wide))
+        let text = store.selectedDay.formatted(.dateTime.locale(Locale(identifier: "en")).weekday(.wide).day().month(.wide))
         return text.prefix(1).uppercased() + text.dropFirst()
     }
 }
@@ -464,7 +464,7 @@ struct CategoryProgress: View {
                     }
                 }
                 .frame(height: 3)
-                .accessibilityLabel("Выполнено \(Int(min(1, tracked / Double(goal * 60)) * 100)) процентов плана")
+                .accessibilityLabel("\(Int(min(1, tracked / Double(goal * 60)) * 100)) percent of the goal")
             }
         }
     }

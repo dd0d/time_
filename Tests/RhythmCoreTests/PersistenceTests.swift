@@ -92,6 +92,6 @@ final class PersistenceTests: XCTestCase {
         let csv = CSVExport.sessions([session], categories: [category])
         XCTAssertTrue(csv.contains("\"Работа\""))
         XCTAssertTrue(csv.contains(",125,"))
-        XCTAssertTrue(csv.hasPrefix("\u{FEFF}"))
+        XCTAssertTrue(csv.hasPrefix("\u{FEFF}Task,Category,Start,End,Seconds,Mode\r\n"))
     }
 }

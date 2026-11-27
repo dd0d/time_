@@ -209,14 +209,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         let hint: String
         if let review = store.pendingIdle {
             symbol = "exclamationmark.circle"
-            hint = "Простой · " + TimeText.duration(review.duration(at: now)) + ". Таймер на паузе; откройте меню, чтобы разобрать время."
+            hint = "Idle time · " + TimeText.duration(review.duration(at: now)) + ". Timer paused. Open the menu to review idle time."
         } else if let active = store.active {
             let time = active.mode.isTimed ? active.remaining(at: now) : active.elapsed(at: now)
             if store.ledger.preferences.showMenuBarTime { title = " " + TimeText.clock(time, countdown: active.mode.isTimed) }
             if active.isPaused { symbol = "pause.circle" }
-            hint = active.displayTitle + " · " + (store.ledger.category(active.categoryID)?.name ?? "Категория") + " · " + store.phaseCaption
+            hint = active.displayTitle + " · " + (store.ledger.category(active.categoryID)?.name ?? "Category") + " · " + store.phaseCaption
         } else {
-            hint = "time_ · сегодня " + TimeText.duration(store.totalToday) + " · ⌃⌥Пробел"
+            hint = "time_ · today " + TimeText.duration(store.totalToday) + " · ⌃⌥Space"
         }
         let fingerprint = title + "|" + symbol + "|" + hint
         guard fingerprint != statusFingerprint else { return }
@@ -233,17 +233,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
 
     private func showContextMenu() {
         let menu = NSMenu()
-        menu.addItem(withTitle: "Открыть time_", action: #selector(openFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: "Open time_", action: #selector(openFromMenu), keyEquivalent: "")
         if let active = store.active {
-            menu.addItem(withTitle: active.isRunning ? "Пауза" : "Продолжить", action: #selector(pauseFromMenu), keyEquivalent: "")
-            menu.addItem(withTitle: "Завершить и сохранить", action: #selector(finishFromMenu), keyEquivalent: "")
+            menu.addItem(withTitle: active.isRunning ? "Pause" : "Resume", action: #selector(pauseFromMenu), keyEquivalent: "")
+            menu.addItem(withTitle: "Stop and Save", action: #selector(finishFromMenu), keyEquivalent: "")
         }
         menu.addItem(.separator())
-        menu.addItem(withTitle: "План на день…", action: #selector(planFromMenu), keyEquivalent: "")
-        menu.addItem(withTitle: "История…", action: #selector(summaryFromMenu), keyEquivalent: "")
-        menu.addItem(withTitle: "Настройки…", action: #selector(settingsFromMenu), keyEquivalent: ",")
+        menu.addItem(withTitle: "Daily Plan…", action: #selector(planFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: "History…", action: #selector(summaryFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: "Settings…", action: #selector(settingsFromMenu), keyEquivalent: ",")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Завершить time_", action: #selector(quitFromMenu), keyEquivalent: "q")
+        menu.addItem(withTitle: "Quit time_", action: #selector(quitFromMenu), keyEquivalent: "q")
         for item in menu.items { item.target = self }
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
@@ -278,30 +278,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         let main = NSMenu()
         let applicationItem = NSMenuItem()
         let application = NSMenu(title: "time_")
-        application.addItem(withTitle: "Настройки…", action: #selector(settingsFromMenu), keyEquivalent: ",").target = self
+        application.addItem(withTitle: "Settings…", action: #selector(settingsFromMenu), keyEquivalent: ",").target = self
         application.addItem(.separator())
-        application.addItem(withTitle: "Завершить time_", action: #selector(quitFromMenu), keyEquivalent: "q").target = self
+        application.addItem(withTitle: "Quit time_", action: #selector(quitFromMenu), keyEquivalent: "q").target = self
         applicationItem.submenu = application
         main.addItem(applicationItem)
         let editItem = NSMenuItem()
-        let edit = NSMenu(title: "Правка")
-        edit.addItem(withTitle: "Отменить", action: Selector(("undo:")), keyEquivalent: "z")
-        let redo = edit.addItem(withTitle: "Повторить", action: Selector(("redo:")), keyEquivalent: "z")
+        let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = edit.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
         redo.keyEquivalentModifierMask = [.command, .shift]
         edit.addItem(.separator())
-        edit.addItem(withTitle: "Вырезать", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        edit.addItem(withTitle: "Копировать", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        edit.addItem(withTitle: "Вставить", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        edit.addItem(withTitle: "Выбрать всё", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = edit
         main.addItem(editItem)
         let windowItem = NSMenuItem()
-        let window = NSMenu(title: "Окно")
-        window.addItem(withTitle: "Таймер", action: #selector(openFromMenu), keyEquivalent: "1").target = self
-        window.addItem(withTitle: "План", action: #selector(planFromMenu), keyEquivalent: "2").target = self
-        window.addItem(withTitle: "История", action: #selector(summaryFromMenu), keyEquivalent: "3").target = self
+        let window = NSMenu(title: "Window")
+        window.addItem(withTitle: "Timer", action: #selector(openFromMenu), keyEquivalent: "1").target = self
+        window.addItem(withTitle: "Plan", action: #selector(planFromMenu), keyEquivalent: "2").target = self
+        window.addItem(withTitle: "History", action: #selector(summaryFromMenu), keyEquivalent: "3").target = self
         window.addItem(.separator())
-        window.addItem(withTitle: "Закрыть окно", action: #selector(closeFromMenu), keyEquivalent: "w").target = self
+        window.addItem(withTitle: "Close Window", action: #selector(closeFromMenu), keyEquivalent: "w").target = self
         windowItem.submenu = window
         main.addItem(windowItem)
         NSApplication.shared.mainMenu = main
@@ -315,17 +315,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         if store.ledger.preferences.soundEnabled { NSSound(named: "Glass")?.play() }
         if store.ledger.preferences.notificationsEnabled {
             let content = UNMutableNotificationContent()
-            content.title = session.isBreak ? "Перерыв окончен" : "Время для паузы"
+            content.title = session.isBreak ? "Break complete" : "Time for a break"
             content.body = session.displayTitle + " · " + TimeText.duration(session.elapsed(at: session.endedAt ?? Date()))
             if session.mode == .pomodoro {
                 if session.isBreak {
-                    content.title = "Отдых окончен"
-                    content.body = "Следующий помодоро готов. Нажмите кружок, когда будете готовы к фокусу."
+                    content.title = "Break complete"
+                    content.body = "Click the circle to start the next focus session."
                 } else if let rest = store.active, rest.isBreak {
-                    content.title = "Перерыв начался"
-                    content.body = rest.displayTitle + " · " + TimeText.duration(rest.targetSeconds) + ". Отсчёт уже запущен."
+                    content.title = "Break started"
+                    content.body = rest.displayTitle + " · " + TimeText.duration(rest.targetSeconds) + ". The timer has started."
                 } else {
-                    content.body += "\nДальше: " + store.pomodoroPhase.title.lowercased() + ". Нажмите кружок, когда будете готовы."
+                    content.body += "\nNext: " + store.pomodoroPhase.title.lowercased() + ". Click the circle when you're ready."
                 }
             }
             UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "rhythm-timer-complete", content: content, trigger: nil))
@@ -335,8 +335,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
     private func notifyIdleReview(_ review: IdleReview) {
         guard store.ledger.preferences.notificationsEnabled else { return }
         let content = UNMutableNotificationContent()
-        content.title = "Разобрать простой"
-        content.body = TimeText.duration(review.duration(at: Date())) + " без активности. Таймер на паузе; выберите, учитывать ли это время."
+        content.title = "Review Idle Time"
+        content.body = TimeText.duration(review.duration(at: Date())) + " idle. Choose whether to count this time as work."
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "rhythm-idle-review", content: content, trigger: nil))
     }
 

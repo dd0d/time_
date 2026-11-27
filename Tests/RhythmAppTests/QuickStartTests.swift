@@ -12,7 +12,7 @@ final class QuickStartTests: XCTestCase {
         XCTAssertTrue(store.canStart)
         store.quickToggle()
         XCTAssertEqual(store.active?.title, "")
-        XCTAssertEqual(store.active?.displayTitle, "Фокус")
+        XCTAssertEqual(store.active?.displayTitle, "Focus")
         XCTAssertEqual(store.page, .focus)
         store.quickToggle()
         XCTAssertTrue(store.active?.isPaused == true)

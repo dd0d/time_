@@ -1,33 +1,35 @@
 # time_
 
-Таймер и план на день в строке меню macOS. Нужен Mac с Apple Silicon и macOS 14 или новее.
+A menu bar timer and daily planner for macOS. Requires macOS 14 or later and a Mac with Apple Silicon.
 
-## Установка
+**[Download time_ for Mac](https://github.com/dd0d/time_/releases/latest/download/time_-macOS-arm64.zip)** · [Release notes and SHA-256](https://github.com/dd0d/time_/releases/latest)
 
-В разделе **Releases** скачайте `time_-macOS-arm64.zip`, распакуйте и перенесите `time_.app` в «Программы». После запуска значок появится в строке меню. Откройте панель нажатием на значок или сочетанием **⌃⌥Пробел**.
+## Install
 
-Текущий ZIP использует локальную подпись ad hoc. Если macOS блокирует запуск скачанной копии, соберите приложение из исходников.
+1. Unzip the download and move `time_.app` to Applications.
+2. Open time_. Click the circle in the menu bar or press **Control-Option-Space** to open the panel.
 
-## Использование
+The app has an ad hoc signature and is not notarized. If macOS blocks it as an app from an unidentified developer, you can build it locally. If you trust the downloaded copy, Apple documents how to approve it in [Privacy & Security](https://support.apple.com/en-us/102445).
 
-- **Отсчёт.** Круглый значок запускает, ставит на паузу и продолжает сессию. Квадрат завершает её и сохраняет время. Нажмите на часы для выбора таймера, секундомера или помодоро. Нажмите на название для выбора задачи и категории.
-- **План.** Откройте через меню **… → План на день** или **⌘2**. Задачу можно сделать ежедневной. Длительность необязательна. Круг отмечает выполнение, ▶ запускает отсчёт. Выполненное скрывается в отдельном разделе.
-- **История.** Кнопка графика открывает время за день и неделю. Кнопка «Аналитика» показывает распределение по категориям и активность за год.
-- **Помодоро.** Длительности фокуса и перерывов задаются в настройках. Перерывы исключаются из истории работы. Следующий фокус запускается вручную.
-- **Простой.** После паузы из-за простоя можно исключить это время или засчитать его как рабочее. Сон Mac также ставит отсчёт на паузу.
-- **Оформление.** В настройках доступны тема, акцент, прозрачность и значок строки меню. Булавка удерживает панель открытой и позволяет её перемещать.
+## Use time_
 
-## Данные
+- Click the circle in the panel to start, pause, or resume. The square stops the timer and saves the session.
+- Click the time to choose a countdown, stopwatch, or Pomodoro. Click the task name to set a title or category.
+- Open **Daily Plan** with **Command-2**. Tasks can repeat daily, and time goals are optional.
+- Open **History** to see sessions and daily totals. **Analytics** shows activity over time and totals by category.
+- Change the theme, accent color, transparency, menu bar icon, sounds, notifications, idle threshold, and Pomodoro intervals in **Settings**.
 
-Приложение работает без учётной записи и хранит данные на Mac в `~/Library/Application Support/Rhythm/ledger.json`. Предыдущая версия файла сохраняется как `ledger.backup.json`. В настройках можно открыть папку данных, сделать JSON-копию или экспортировать историю в CSV.
+## Data
 
-## Сборка
+time_ runs locally. Tasks and sessions are stored in `~/Library/Application Support/Rhythm/ledger.json`. Settings has CSV export and JSON backup. Updating preserves existing task and category names.
 
-Установите Xcode или Command Line Tools со Swift 6. Сторонних зависимостей нет.
+## Build
+
+Install Xcode or Command Line Tools with Swift 6.
 
 ```sh
 zsh Scripts/test.sh
 zsh Scripts/build.sh
 ```
 
-Готовое приложение, ZIP и SHA-256 появятся в `dist`. GitHub Actions выполняет те же проверки на Apple Silicon. Файлы и команды для выпуска описаны в [RELEASE.md](RELEASE.md).
+Open `dist/time_.app` after building. The build also creates a ZIP and SHA-256 checksum. See [RELEASE.md](RELEASE.md) for publishing.

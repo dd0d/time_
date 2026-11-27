@@ -14,16 +14,16 @@ enum Palette {
 extension AccentChoice {
     var title: String {
         switch self {
-        case .system: return "Системный"
-        case .blue: return "Синий"
-        case .purple: return "Фиолетовый"
-        case .pink: return "Розовый"
-        case .red: return "Красный"
-        case .orange: return "Оранжевый"
-        case .yellow: return "Жёлтый"
-        case .green: return "Зелёный"
-        case .graphite: return "Графитовый"
-        case .custom: return "Свой цвет"
+        case .system: return "System"
+        case .blue: return "Blue"
+        case .purple: return "Purple"
+        case .pink: return "Pink"
+        case .red: return "Red"
+        case .orange: return "Orange"
+        case .yellow: return "Yellow"
+        case .green: return "Green"
+        case .graphite: return "Graphite"
+        case .custom: return "Custom color"
         }
     }
 
@@ -101,7 +101,7 @@ struct RhythmAppearance: ViewModifier {
         content.accentColor(store.accentColor).tint(store.accentColor)
             .environment(\.rhythmAccent, store.accentColor)
             .environment(\.rhythmAccentForeground, store.accentForeground)
-            .environment(\.locale, Locale(identifier: "ru_RU"))
+            .environment(\.locale, Locale(identifier: "en"))
     }
 }
 
@@ -140,8 +140,8 @@ extension MenuBarIcon {
     var title: String {
         switch self {
         case .rhythm: return "time_"
-        case .timer: return "Таймер"
-        case .circle: return "Круг"
+        case .timer: return "Timer"
+        case .circle: return "Circle"
         }
     }
     var symbol: String {
@@ -310,15 +310,15 @@ struct CategoryPicker: View {
     }
     var body: some View {
         SelectionDropdown(selection: $selection, options: options,
-                          title: { store.ledger.category($0)?.name ?? "Категория" },
+                          title: { store.ledger.category($0)?.name ?? "Category" },
                           rowTitle: { id in
-            guard let category = store.ledger.category(id) else { return "Категория" }
-            if !showsProgress { return category.name + (category.isArchived ? " · архив" : "") }
+            guard let category = store.ledger.category(id) else { return "Category" }
+            if !showsProgress { return category.name + (category.isArchived ? " · archived" : "") }
             let worked = store.ledger.total(on: store.now, categoryID: id, at: store.now)
             let goal = store.ledger.plannedMinutes(for: id, on: store.now)
             return category.name + " · " + TimeText.duration(worked) + (goal > 0 ? " / " + TimeText.duration(Double(goal * 60)) : "")
-        }, dot: { store.ledger.category($0)?.color.tint }, accessibilityTitle: "Категория",
-                          footerTitle: allowsManagement ? "Настроить категории…" : nil,
+        }, dot: { store.ledger.category($0)?.color.tint }, accessibilityTitle: "Category",
+                          footerTitle: allowsManagement ? "Manage Categories…" : nil,
                           footerAction: allowsManagement ? { store.showCategories = true } : nil)
     }
 }

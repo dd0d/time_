@@ -109,7 +109,7 @@ final class TrackingTests: XCTestCase {
         XCTAssertEqual(TimeText.clock(0.1, countdown: true), "00:01")
         XCTAssertEqual(TimeText.clock(0.9), "00:00")
         XCTAssertEqual(TimeText.clock(3661), "1:01:01")
-        XCTAssertEqual(TimeText.duration(59), "< 1 мин")
-        XCTAssertEqual(TimeText.duration(3660), "1 ч 1 мин")
+        XCTAssertEqual(TimeText.duration(59), "< 1 min")
+        XCTAssertEqual(TimeText.duration(3660), "1 hr 1 min")
     }
 }

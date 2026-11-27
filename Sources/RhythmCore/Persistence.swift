@@ -52,13 +52,13 @@ public enum CSVExport {
         let rows = sessions.filter { !$0.isBreak }.map { session -> String in
             [
                 field(session.displayTitle),
-                field(categories.first { $0.id == session.categoryID }?.name ?? "Без категории"),
+                field(categories.first { $0.id == session.categoryID }?.name ?? "Uncategorized"),
                 field(formatter.string(from: session.startedAt)),
                 field(formatter.string(from: session.endedAt ?? session.startedAt)),
                 String(Int(session.elapsed(at: session.endedAt ?? session.startedAt))),
-                field(session.mode == .pomodoro ? "Помодоро" : session.mode == .countdown ? "Таймер" : "Секундомер")
+                field(session.mode == .pomodoro ? "Pomodoro" : session.mode == .countdown ? "Timer" : "Stopwatch")
             ].joined(separator: ",")
         }
-        return "\u{FEFF}Задача,Категория,Начало,Конец,Секунды,Режим\r\n" + rows.joined(separator: "\r\n")
+        return "\u{FEFF}Task,Category,Start,End,Seconds,Mode\r\n" + rows.joined(separator: "\r\n")
     }
 }

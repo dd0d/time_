@@ -10,9 +10,9 @@ public enum PomodoroPhase: String, Codable, Sendable {
     public var isBreak: Bool { self != .focus }
     public var title: String {
         switch self {
-        case .focus: return "Помодоро"
-        case .shortBreak: return "Короткий перерыв"
-        case .longBreak: return "Длинный перерыв"
+        case .focus: return "Pomodoro"
+        case .shortBreak: return "Short break"
+        case .longBreak: return "Long break"
         }
     }
 }
@@ -185,7 +185,7 @@ public struct WorkSession: Identifiable, Codable, Equatable, Sendable {
     public var isBreak: Bool { mode == .pomodoro && pomodoroPhase?.isBreak == true }
     public var displayTitle: String {
         if isBreak { return pomodoroPhase!.title }
-        return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? (mode == .pomodoro ? "Помодоро" : "Фокус") : title
+        return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? (mode == .pomodoro ? "Pomodoro" : "Focus") : title
     }
 
     public func elapsed(at now: Date) -> TimeInterval {
@@ -298,9 +298,9 @@ public struct Ledger: Codable, Equatable, Sendable {
     public var preferences: Preferences
 
     public init(categories: [TimeCategory] = [
-        TimeCategory(name: "Работа", color: .lavender),
-        TimeCategory(name: "Учёба", color: .blue),
-        TimeCategory(name: "Личное", color: .rose)
+        TimeCategory(name: "Work", color: .lavender),
+        TimeCategory(name: "Study", color: .blue),
+        TimeCategory(name: "Personal", color: .rose)
     ], tasks: [PlanTask] = [], sessions: [WorkSession] = [], activeSession: WorkSession? = nil, preferences: Preferences = Preferences(), pomodoroProgress: PomodoroProgress? = nil, idleReview: IdleReview? = nil, dailyTaskSchedules: [DailyTaskSchedule] = []) {
         self.categories = categories
         self.tasks = tasks
@@ -421,8 +421,8 @@ public enum TimeText {
 
     public static func duration(_ seconds: TimeInterval) -> String {
         let minutes = max(0, Int(seconds / 60))
-        if seconds > 0 && minutes == 0 { return "< 1 мин" }
-        if minutes >= 60 { return minutes % 60 == 0 ? "\(minutes / 60) ч" : "\(minutes / 60) ч \(minutes % 60) мин" }
-        return "\(minutes) мин"
+        if seconds > 0 && minutes == 0 { return "< 1 min" }
+        if minutes >= 60 { return minutes % 60 == 0 ? "\(minutes / 60) hr" : "\(minutes / 60) hr \(minutes % 60) min" }
+        return "\(minutes) min"
     }
 }
