@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key><string>time_</string>
+    <key>CFBundleDisplayName</key><string>time_</string>
+    <key>CFBundleExecutable</key><string>time_</string>
+    <key>CFBundleIdentifier</key><string>software.rhythm.mac</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleShortVersionString</key><string>1.6.2</string>
+    <key>CFBundleVersion</key><string>11</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>LSMinimumSystemVersion</key><string>14.0</string>
+    <key>LSUIElement</key><true/>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSPrincipalClass</key><string>NSApplication</string>
+    <key>CFBundleDevelopmentRegion</key><string>ru</string>
+    <key>CFBundleLocalizations</key><array><string>ru</string></array>
+    <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+    <key>NSHumanReadableCopyright</key><string>© 2026 time_</string>
+</dict>
+</plist>

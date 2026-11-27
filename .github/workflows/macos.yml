@@ -1,0 +1,47 @@
+name: macOS
+
+"on":
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check release tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)
+          test "$GITHUB_REF_NAME" = "v$version"
+
+      - name: Test
+        run: zsh Scripts/test.sh
+
+      - name: Build macOS app
+        run: zsh Scripts/build.sh
+
+      - name: Verify release archive
+        working-directory: dist
+        run: |
+          unzip -tq time_-macOS-arm64.zip
+          shasum -a 256 -c time_-macOS-arm64.zip.sha256
+
+      - name: Upload release files
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: time_-macOS-arm64
+          path: |
+            dist/time_-macOS-arm64.zip
+            dist/time_-macOS-arm64.zip.sha256
+          if-no-files-found: error
+          compression-level: 0

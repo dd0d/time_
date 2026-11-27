@@ -1,0 +1,10 @@
+.build/
+.swiftpm/
+dist/
+.DS_Store
+.qa/
+xcuserdata/
+*.xcuserstate
+ledger.json
+ledger.backup.json
+ledger-unreadable-*.json
