@@ -8,3 +8,4 @@ xcuserdata/
 ledger.json
 ledger.backup.json
 ledger-unreadable-*.json
+ledger-before-restore-*.json

@@ -89,6 +89,32 @@ final class TaskRecurrenceTests: XCTestCase {
         XCTAssertEqual(ledger.dailyTaskSchedules.count, 1)
     }
 
+    func testLaterEditKeepsUnvisitedDaysAndPersistsItsEffectiveDate() throws {
+        var ledger = Ledger()
+        let first = makeTask(ledger, on: day(7))
+        ledger.addPlanTask(first, repeatsDaily: true, calendar: calendar)
+        ledger.materializeDailyTasks(on: day(9), calendar: calendar)
+        var task = try XCTUnwrap(ledger.tasks(on: day(9), calendar: calendar).first)
+        task.title = "Swift"
+        task.categoryID = ledger.categories[1].id
+        task.plannedMinutes = 30
+        ledger.updatePlanTask(task, repeatsDaily: true, calendar: calendar)
+
+        let data = try JSONEncoder().encode(ledger)
+        var decoded = try JSONDecoder().decode(Ledger.self, from: data)
+        XCTAssertEqual(decoded.plannedMinutes(for: first.categoryID, on: day(8), calendar: calendar), 60)
+        XCTAssertEqual(decoded.plannedMinutes(for: task.categoryID, on: day(10), calendar: calendar), 30)
+        decoded.materializeDailyTasks(on: day(8), calendar: calendar)
+        decoded.materializeDailyTasks(on: day(10), calendar: calendar)
+        let earlier = try XCTUnwrap(decoded.tasks(on: day(8), calendar: calendar).first)
+        let later = try XCTUnwrap(decoded.tasks(on: day(10), calendar: calendar).first)
+        XCTAssertEqual(earlier.title, first.title)
+        XCTAssertEqual(earlier.categoryID, first.categoryID)
+        XCTAssertEqual(earlier.plannedMinutes, first.plannedMinutes)
+        XCTAssertEqual(later.title, task.title)
+        XCTAssertEqual(later.dailyScheduleID, earlier.dailyScheduleID)
+    }
+
     func testDisablingDailyKeepsThisDayAndPastButRemovesFutureOccurrences() {
         var ledger = Ledger()
         ledger.addPlanTask(makeTask(ledger, on: day(7)), repeatsDaily: true, calendar: calendar)

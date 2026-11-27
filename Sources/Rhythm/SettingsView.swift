@@ -55,11 +55,8 @@ struct SettingsView: View {
                 Text(L10n.text("DATA")).font(AppTypography.section).foregroundStyle(.secondary)
                 Button(L10n.text("Export History as CSV…")) { store.exportCSV() }
                 Button(L10n.text("Save Backup…")) { store.exportBackup() }
-                Button(L10n.text("Open Data Folder")) {
-                    let directory = store.file.url.deletingLastPathComponent()
-                    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-                    NSWorkspace.shared.open(directory)
-                }
+                Button(L10n.text("Restore Backup…")) { store.chooseBackupToRestore() }
+                Button(L10n.text("Open Data Folder")) { store.openDataFolder() }
             }
             .font(AppTypography.detail)
             HStack {

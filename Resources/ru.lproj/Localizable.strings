@@ -312,3 +312,14 @@
 "LANGUAGE" = "ЯЗЫК";
 "Interface language" = "Язык интерфейса";
 "Quit and reopen time_ to apply the language." = "Закройте и снова откройте time_, чтобы сменить язык.";
+
+"Data unavailable" = "Данные недоступны";
+"Restore Backup…" = "Восстановить из копии…";
+"Choose Backup" = "Выбрать копию";
+"Restore this backup?" = "Восстановить данные из этой копии?";
+"This replaces your current tasks, history and settings. A copy of your current data will stay in the data folder." = "Текущие задачи, история и настройки будут заменены. Копия текущих данных останется в папке данных.";
+"Restore" = "Восстановить";
+"Could not restore backup: %@" = "Не удалось восстановить данные из копии: %@";
+"Could not open the data folder: %@" = "Не удалось открыть папку данных: %@";
+"This backup uses an unsupported data version." = "Версия данных в этой копии не поддерживается.";
+"This backup contains invalid data." = "Резервная копия содержит некорректные данные.";

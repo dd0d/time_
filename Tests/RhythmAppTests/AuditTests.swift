@@ -79,6 +79,65 @@ final class AuditTests: XCTestCase {
     }
 
     @MainActor
+    func testUnreadableStorageRejectsEditsAndRestoresFromExport() async throws {
+        let directory = try directory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = LedgerFile(url: directory.appendingPathComponent("ledger.json"))
+        let invalid = Data("unreadable".utf8)
+        try invalid.write(to: file.url)
+        let store = AppStore(dataURL: file.url)
+        XCTAssertTrue(store.isStorageReadOnly)
+        XCTAssertFalse(store.canStart)
+        store.addTask(title: "Cannot be saved", categoryID: store.categories[0].id, minutes: 15, day: Date())
+        store.addCategory(name: "Cannot be saved", color: .mint, goal: 0)
+        XCTAssertTrue(store.ledger.tasks.isEmpty)
+        XCTAssertEqual(store.categories.count, 3)
+        XCTAssertThrowsError(try store.restoreBackup(from: file.url))
+        XCTAssertEqual(try Data(contentsOf: file.url), invalid)
+        XCTAssertTrue(store.isStorageReadOnly)
+
+        let date = Date().addingTimeInterval(-60)
+        var ledger = Ledger()
+        ledger.activeSession = WorkSession(title: "Reading", categoryID: ledger.categories[0].id, mode: .stopwatch, startedAt: date.addingTimeInterval(-30))
+        let export = directory.appendingPathComponent("export.json")
+        try LedgerEnvelope(savedAt: date, ledger: ledger).write(to: export)
+        try store.restoreBackup(from: export)
+        XCTAssertFalse(store.isStorageReadOnly)
+        XCTAssertNil(store.storageError)
+        XCTAssertTrue(store.active?.isPaused == true)
+        XCTAssertEqual(store.active?.elapsed(at: Date()), 30)
+        XCTAssertEqual(try file.load()?.ledger, store.ledger)
+        let snapshot = try XCTUnwrap(FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            .first { $0.lastPathComponent.hasPrefix("ledger-before-restore-") })
+        XCTAssertEqual(try Data(contentsOf: snapshot), invalid)
+    }
+
+    @MainActor
+    func testRestorePreservesTheCurrentLedgerAndRejectsInvalidValues() async throws {
+        let directory = try directory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = LedgerFile(url: directory.appendingPathComponent("ledger.json"))
+        let store = AppStore(dataURL: file.url)
+        store.addTask(title: "Latest task", categoryID: store.categories[0].id, minutes: 15, day: Date())
+        let previous = store.ledger
+        let export = directory.appendingPathComponent("export.json")
+        var imported = Ledger()
+        imported.addPlanTask(PlanTask(title: "Imported task", categoryID: imported.categories[0].id, plannedMinutes: Int.max, day: Date()))
+        try LedgerEnvelope(savedAt: Date(), ledger: imported).write(to: export)
+        XCTAssertThrowsError(try store.restoreBackup(from: export))
+        XCTAssertEqual(store.ledger, previous)
+
+        imported.tasks[0].plannedMinutes = 20
+        try LedgerEnvelope(savedAt: Date(), ledger: imported).write(to: export)
+        try store.restoreBackup(from: export)
+        store.prepareToQuit()
+        XCTAssertEqual(try file.load()?.ledger, imported)
+        let snapshot = try XCTUnwrap(FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            .first { $0.lastPathComponent.hasPrefix("ledger-before-restore-") })
+        XCTAssertEqual(try LedgerFile(url: snapshot).load()?.ledger, previous)
+    }
+
+    @MainActor
     func testCategoryChangeCannotChargeTimeToPreviouslySelectedTask() async throws {
         let directory = try directory()
         defer { try? FileManager.default.removeItem(at: directory) }

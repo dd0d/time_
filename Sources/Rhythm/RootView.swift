@@ -4,7 +4,9 @@ import RhythmCore
 struct RootView: View {
     static let compactSize = NSSize(width: 260, height: 100)
     static let expandedSize = NSSize(width: 392, height: 640)
+    private static let recoverySize = NSSize(width: 392, height: 230)
     @MainActor static func size(for store: AppStore) -> NSSize {
+        if store.isStorageReadOnly { return recoverySize }
         guard store.page == .focus else { return expandedSize }
         return NSSize(width: compactSize.width, height: compactSize.height + (store.compactEditor != nil ? store.compactEditorHeight : 0))
     }
@@ -13,7 +15,9 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if store.page == .focus {
+            if store.isStorageReadOnly {
+                recoveryView.frame(width: Self.recoverySize.width, height: Self.recoverySize.height)
+            } else if store.page == .focus {
                 VStack(spacing: 0) {
                     CompactMenuView().frame(height: Self.compactSize.height)
                     if let editor = store.compactEditor { CompactEditorView(editor: editor).id(editor) }
@@ -30,6 +34,25 @@ struct RootView: View {
             else { store.page = .focus }
         }
         .modifier(RhythmAppearance(store: store))
+    }
+
+    private var recoveryView: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(L10n.text("Data unavailable"), systemImage: "exclamationmark.triangle")
+                .font(AppTypography.pageTitle)
+            if let error = store.storageError {
+                ScrollView {
+                    Text(error).font(AppTypography.body).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 86)
+            }
+            HStack {
+                Button(L10n.text("Restore Backup…")) { store.chooseBackupToRestore() }
+                Button(L10n.text("Open Data Folder")) { store.openDataFolder() }
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

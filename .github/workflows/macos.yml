@@ -32,11 +32,16 @@ jobs:
       - name: Build disk image
         run: zsh Scripts/make-dmg.sh
 
-      - name: Verify release archive
+      - name: Verify release files
         working-directory: dist
         run: |
           unzip -tq time_-macOS-arm64.zip
           shasum -a 256 -c time_-macOS-arm64.zip.sha256
+          unpacked=$(mktemp -d)
+          trap 'rm -rf -- "$unpacked"' EXIT
+          ditto -x -k time_-macOS-arm64.zip "$unpacked"
+          codesign --verify --deep --strict "$unpacked/time_.app"
+          cmp ../LICENSE "$unpacked/time_.app/Contents/Resources/LICENSE.txt"
           hdiutil verify -quiet time_-macOS-arm64.dmg
           codesign --verify time_-macOS-arm64.dmg
           shasum -a 256 -c time_-macOS-arm64.dmg.sha256

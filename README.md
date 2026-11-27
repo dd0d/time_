@@ -8,6 +8,8 @@ time_ is a native macOS menu bar app for tracking time and planning your day. St
 
 Requires macOS 14 or later.
 
+The download is ad hoc signed and macOS may ask you to allow the first launch. [Build from source](#technical-details)
+
 ## Screenshots
 
 <img src="docs/screenshots/compact.png" alt="Compact time_ panel with a running Pomodoro, task name, and an accent-colored pin" width="310">
@@ -37,7 +39,15 @@ Requires macOS 14 or later.
 
 - **App.** SwiftUI views with AppKit for the menu bar item, floating panel, and system appearance.
 - **Core.** [RhythmCore](Sources/RhythmCore) handles timer state, recurring tasks, analytics, and persistence. Swift Package Manager builds the app without third-party packages.
-- **Data.** Tasks and sessions stay on your Mac in `~/Library/Application Support/Rhythm/ledger.json`. Settings includes CSV export and JSON backups.
+- **Data.** Tasks and sessions stay on your Mac in `~/Library/Application Support/Rhythm/ledger.json`. Idle detection reads the macOS counter for time since the last input. It doesn't record your keystrokes.
+
+### Back up or move your data
+
+Open **Settings → Save Backup…** to save tasks, session history, and settings as JSON. On the same Mac or a new one, choose **Restore Backup…** and select that file. time_ keeps a copy of the previous data in its data folder before replacing it. The recovery screen offers the same restore action when time_ can't read its data.
+
+Use **Export History as CSV…** to analyze completed sessions in a spreadsheet. Save a JSON backup before returning to an older build so you can recover edits to recurring tasks when you upgrade again.
+
+### Build from source
 
 Run these commands on Apple Silicon with the Swift 6 toolchain from Xcode or Command Line Tools.
 
@@ -47,3 +57,5 @@ zsh Scripts/build.sh
 ```
 
 Open `dist/time_.app` after the build.
+
+[Release process](docs/releasing.md) · [MIT license](LICENSE)

@@ -1,6 +1,13 @@
 import Foundation
 
 public struct DailyTaskSchedule: Identifiable, Codable, Equatable, Sendable {
+    private struct Revision: Codable, Equatable, Sendable {
+        let startsOn: Date
+        let title: String
+        let categoryID: UUID
+        let plannedMinutes: Int
+    }
+
     public var id: UUID
     public var title: String
     public var categoryID: UUID
@@ -8,6 +15,13 @@ public struct DailyTaskSchedule: Identifiable, Codable, Equatable, Sendable {
     public var startsOn: Date
     public var endsBefore: Date?
     public var createdAt: Date
+    private var revisions: [Revision]?
+
+    var isValidForRestore: Bool {
+        (0...480).contains(plannedMinutes) && LedgerEnvelope.validDate(startsOn)
+            && endsBefore.map(LedgerEnvelope.validDate) != false
+            && revisions?.allSatisfy { (0...480).contains($0.plannedMinutes) && LedgerEnvelope.validDate($0.startsOn) } != false
+    }
 
     public init(id: UUID = UUID(), task: PlanTask) {
         self.id = id
@@ -22,6 +36,28 @@ public struct DailyTaskSchedule: Identifiable, Codable, Equatable, Sendable {
         let day = calendar.startOfDay(for: day)
         return day >= calendar.startOfDay(for: startsOn)
             && (endsBefore == nil || day < calendar.startOfDay(for: endsBefore!))
+    }
+
+    func template(on day: Date, calendar: Calendar) -> (title: String, categoryID: UUID, plannedMinutes: Int) {
+        let day = calendar.startOfDay(for: day)
+        if let revision = revisions?.last(where: { calendar.startOfDay(for: $0.startsOn) <= day }) {
+            return (revision.title, revision.categoryID, revision.plannedMinutes)
+        }
+        return (title, categoryID, plannedMinutes)
+    }
+
+    mutating func update(from task: PlanTask, calendar: Calendar) {
+        let day = calendar.startOfDay(for: task.day)
+        if day <= calendar.startOfDay(for: startsOn) {
+            title = task.title
+            categoryID = task.categoryID
+            plannedMinutes = task.plannedMinutes
+            revisions = nil
+        } else {
+            var earlier = (revisions ?? []).filter { calendar.startOfDay(for: $0.startsOn) < day }
+            earlier.append(Revision(startsOn: day, title: task.title, categoryID: task.categoryID, plannedMinutes: task.plannedMinutes))
+            revisions = earlier
+        }
     }
 }
 
@@ -45,8 +81,9 @@ extension Ledger {
         var changed = false
         for schedule in dailyTaskSchedules where schedule.includes(day, calendar: calendar) {
             guard !tasks.contains(where: { $0.dailyScheduleID == schedule.id && calendar.isDate($0.day, inSameDayAs: day) }) else { continue }
-            tasks.append(PlanTask(title: schedule.title, categoryID: schedule.categoryID,
-                                  plannedMinutes: schedule.plannedMinutes, day: day,
+            let template = schedule.template(on: day, calendar: calendar)
+            tasks.append(PlanTask(title: template.title, categoryID: template.categoryID,
+                                  plannedMinutes: template.plannedMinutes, day: day,
                                   createdAt: schedule.createdAt, dailyScheduleID: schedule.id))
             changed = true
         }
@@ -66,10 +103,9 @@ extension Ledger {
                 // date changes for new series and one-time tasks only.
                 updated.day = original.day
                 updated.dailyScheduleID = scheduleID
-                dailyTaskSchedules[index].title = updated.title
-                dailyTaskSchedules[index].categoryID = updated.categoryID
-                dailyTaskSchedules[index].plannedMinutes = updated.plannedMinutes
-                for index in tasks.indices where tasks[index].dailyScheduleID == scheduleID && tasks[index].day >= original.day {
+                dailyTaskSchedules[index].update(from: updated, calendar: calendar)
+                let effectiveDay = calendar.startOfDay(for: original.day)
+                for index in tasks.indices where tasks[index].dailyScheduleID == scheduleID && calendar.startOfDay(for: tasks[index].day) >= effectiveDay {
                     tasks[index].title = updated.title
                     tasks[index].categoryID = updated.categoryID
                     tasks[index].plannedMinutes = updated.plannedMinutes

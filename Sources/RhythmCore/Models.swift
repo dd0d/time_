@@ -363,10 +363,14 @@ public struct Ledger: Codable, Equatable, Sendable {
     public func plannedMinutes(for categoryID: UUID, on day: Date, calendar: Calendar = .current) -> Int {
         if let category = category(categoryID), category.dailyGoalMinutes > 0 { return category.dailyGoalMinutes }
         let stored = tasks.lazy.filter { $0.categoryID == categoryID && calendar.isDate($0.day, inSameDayAs: day) }.reduce(0) { $0 + $1.plannedMinutes }
-        return stored + dailyTaskSchedules.lazy.filter { schedule in
-            schedule.categoryID == categoryID && schedule.includes(day, calendar: calendar)
-                && !tasks.contains { $0.dailyScheduleID == schedule.id && calendar.isDate($0.day, inSameDayAs: day) }
-        }.reduce(0) { $0 + $1.plannedMinutes }
+        return dailyTaskSchedules.reduce(stored) { total, schedule in
+            guard schedule.includes(day, calendar: calendar) else { return total }
+            let template = schedule.template(on: day, calendar: calendar)
+            guard template.categoryID == categoryID,
+                  !tasks.contains(where: { $0.dailyScheduleID == schedule.id && calendar.isDate($0.day, inSameDayAs: day) })
+            else { return total }
+            return total + template.plannedMinutes
+        }
     }
 
     /// Completes a countdown at its actual deadline even if a tick is delayed.

@@ -57,6 +57,7 @@ final class AppStore: ObservableObject {
     }
     @Published var lastCompleted: WorkSession?
     @Published var storageError: String?
+    @Published private(set) var isStorageReadOnly = false
     var showSettings: Bool {
         get { page == .settings }
         set { if newValue { page = .settings } }
@@ -85,7 +86,6 @@ final class AppStore: ObservableObject {
     private var saveRevision = 0
     private var saveFailed = false
     private var lastCheckpoint = Date()
-    private var writesBlocked = false
     private let idleTimeProvider: () -> TimeInterval
     private var glowPreviewTask: Task<Void, Never>?
     private var taskDay = Calendar.current.startOfDay(for: Date())
@@ -101,7 +101,7 @@ final class AppStore: ObservableObject {
     var totalSelectedDay: TimeInterval { ledger.total(on: selectedDay, at: now) }
     var isToday: Bool { Calendar.current.isDateInToday(selectedDay) }
     var pendingIdle: IdleReview? { ledger.idleReview }
-    var canStart: Bool { active == nil && pendingIdle == nil && !writesBlocked && selectedCategory != nil }
+    var canStart: Bool { active == nil && pendingIdle == nil && !isStorageReadOnly && selectedCategory != nil }
     var pomodoroPhase: PomodoroPhase { active?.mode == .pomodoro ? (active?.pomodoroPhase ?? .focus) : (ledger.pomodoroProgress?.nextPhase ?? .focus) }
     var idleSeconds: TimeInterval {
         mode == .pomodoro ? ledger.preferences.pomodoro.seconds(for: pomodoroPhase) : (mode == .countdown ? Double(min(480, max(1, minutes))) * 60 : 0)
@@ -142,7 +142,7 @@ final class AppStore: ObservableObject {
             }
         } catch {
             // Preserve the original before attempting to restore a recovery copy.
-            let preservedURL = file.url.deletingLastPathComponent().appendingPathComponent("ledger-unreadable-\(Int(Date().timeIntervalSince1970)).json")
+            let preservedURL = file.url.deletingLastPathComponent().appendingPathComponent("ledger-unreadable-\(UUID().uuidString).json")
             do {
                 try FileManager.default.copyItem(at: file.url, to: preservedURL)
                 if let backup = try file.loadBackup() {
@@ -165,7 +165,7 @@ final class AppStore: ObservableObject {
         mode = initial.preferences.lastMode
         minutes = max(1, min(480, initial.preferences.defaultMinutes))
         storageError = errorMessage
-        writesBlocked = blocked
+        isStorageReadOnly = blocked
         if let active = initial.activeSession {
             title = active.title
             selectedCategoryID = active.categoryID
@@ -214,7 +214,7 @@ final class AppStore: ObservableObject {
     }
 
     func selectCategoryQuickly(_ id: UUID) {
-        guard categories.contains(where: { $0.id == id }) else { return }
+        guard !isStorageReadOnly, categories.contains(where: { $0.id == id }) else { return }
         if pendingIdle != nil { presentIdleReview(); return }
         guard id != currentCategoryID else {
             selectedCategoryID = id
@@ -260,7 +260,7 @@ final class AppStore: ObservableObject {
     }
 
     func skipPomodoroBreak() {
-        guard pomodoroPhase.isBreak else { return }
+        guard !isStorageReadOnly, pomodoroPhase.isBreak else { return }
         if active?.isBreak == true { finish() }
         else {
             var progress = ledger.pomodoroProgress ?? PomodoroProgress()
@@ -271,12 +271,13 @@ final class AppStore: ObservableObject {
     }
 
     func resetPomodoro() {
-        guard active == nil else { return }
+        guard !isStorageReadOnly, active == nil else { return }
         ledger.pomodoroProgress = PomodoroProgress()
         save()
     }
 
     func updateSessionDetails(title newTitle: String, categoryID: UUID) {
+        guard !isStorageReadOnly else { return }
         let clean = String(newTitle.trimmingCharacters(in: .whitespacesAndNewlines).prefix(240))
         if let selectedTaskID, let task = ledger.tasks.first(where: { $0.id == selectedTaskID }), task.title != clean || task.categoryID != categoryID {
             self.selectedTaskID = nil
@@ -295,6 +296,7 @@ final class AppStore: ObservableObject {
     }
 
     func saveTimerPreferences() {
+        guard !isStorageReadOnly else { return }
         minutes = max(1, min(480, minutes))
         ledger.preferences.defaultMinutes = minutes
         ledger.preferences.lastMode = mode
@@ -446,7 +448,7 @@ final class AppStore: ObservableObject {
     }
 
     func save() {
-        guard !writesBlocked else { return }
+        guard !isStorageReadOnly else { return }
         let date = Date()
         let needsCheckpoint = (active?.isRunning == true || pendingIdle?.returnedAt == nil && pendingIdle != nil)
             && date.timeIntervalSince(lastCheckpoint) >= 15
@@ -472,7 +474,7 @@ final class AppStore: ObservableObject {
     }
 
     func useTask(_ task: PlanTask, startImmediately: Bool = false) {
-        guard active == nil else { return }
+        guard !isStorageReadOnly, active == nil else { return }
         title = task.title
         selectedCategoryID = task.categoryID
         selectedTaskID = task.id
@@ -486,6 +488,7 @@ final class AppStore: ObservableObject {
     func clearTaskAssociation() { selectedTaskID = nil }
 
     func addTask(title: String, categoryID: UUID, minutes: Int, day: Date, isDaily: Bool = false) {
+        guard !isStorageReadOnly else { return }
         let clean = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty else { return }
         ledger.addPlanTask(PlanTask(title: String(clean.prefix(240)), categoryID: categoryID, plannedMinutes: max(0, min(480, minutes)), day: Calendar.current.startOfDay(for: day)), repeatsDaily: isDaily)
@@ -494,6 +497,7 @@ final class AppStore: ObservableObject {
     }
 
     func updateTask(_ task: PlanTask, isDaily: Bool? = nil) {
+        guard !isStorageReadOnly else { return }
         ledger.updatePlanTask(task, repeatsDaily: isDaily ?? (task.dailyScheduleID != nil))
         materializeDailyTasks(on: Date())
         clearMissingTaskAssociation()
@@ -501,18 +505,20 @@ final class AppStore: ObservableObject {
     }
 
     func toggleTask(_ id: UUID) {
-        guard let index = ledger.tasks.firstIndex(where: { $0.id == id }) else { return }
+        guard !isStorageReadOnly, let index = ledger.tasks.firstIndex(where: { $0.id == id }) else { return }
         ledger.tasks[index].completedAt = ledger.tasks[index].completedAt == nil ? Date() : nil
         save()
     }
 
     func moveTaskToToday(_ id: UUID) {
-        guard let index = ledger.tasks.firstIndex(where: { $0.id == id }), ledger.tasks[index].dailyScheduleID == nil else { return }
+        guard !isStorageReadOnly, let index = ledger.tasks.firstIndex(where: { $0.id == id }),
+              ledger.tasks[index].dailyScheduleID == nil else { return }
         ledger.tasks[index].day = Calendar.current.startOfDay(for: Date())
         save()
     }
 
     func deleteTask(_ id: UUID) {
+        guard !isStorageReadOnly else { return }
         ledger.deletePlanTask(id)
         clearMissingTaskAssociation()
         save()
@@ -530,6 +536,7 @@ final class AppStore: ObservableObject {
     }
 
     private func materializeDailyTasks(on day: Date) {
+        guard !isStorageReadOnly else { return }
         var updated = ledger
         guard updated.materializeDailyTasks(on: day) else { return }
         ledger = updated
@@ -548,6 +555,7 @@ final class AppStore: ObservableObject {
     }
 
     func addCategory(name: String, color: CategoryColor, goal: Int) {
+        guard !isStorageReadOnly else { return }
         let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty else { return }
         let category = TimeCategory(name: String(clean.prefix(40)), color: color, dailyGoalMinutes: max(0, min(1440, goal)))
@@ -557,13 +565,13 @@ final class AppStore: ObservableObject {
     }
 
     func updateCategory(_ category: TimeCategory) {
-        guard let index = ledger.categories.firstIndex(where: { $0.id == category.id }) else { return }
+        guard !isStorageReadOnly, let index = ledger.categories.firstIndex(where: { $0.id == category.id }) else { return }
         ledger.categories[index] = category
         save()
     }
 
     func archiveCategory(_ id: UUID) {
-        guard categories.count > 1, active?.categoryID != id,
+        guard !isStorageReadOnly, categories.count > 1, active?.categoryID != id,
               let index = ledger.categories.firstIndex(where: { $0.id == id }) else { return }
         ledger.categories[index].isArchived = true
         if selectedCategoryID == id { selectedCategoryID = categories[0].id }
@@ -571,12 +579,13 @@ final class AppStore: ObservableObject {
     }
 
     func restoreCategory(_ id: UUID) {
-        guard let index = ledger.categories.firstIndex(where: { $0.id == id }) else { return }
+        guard !isStorageReadOnly, let index = ledger.categories.firstIndex(where: { $0.id == id }) else { return }
         ledger.categories[index].isArchived = false
         save()
     }
 
     func deleteSession(_ id: UUID) {
+        guard !isStorageReadOnly else { return }
         ledger.sessions.removeAll { $0.id == id }
         save()
         onStatusChanged?()
@@ -604,9 +613,70 @@ final class AppStore: ObservableObject {
         panel.nameFieldStringValue = L10n.text("time_ backup.json")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            try encoder.encode(LedgerEnvelope(savedAt: Date(), ledger: ledger)).write(to: url, options: .atomic)
+            try LedgerEnvelope(savedAt: Date(), ledger: ledger).write(to: url)
         } catch { storageError = L10n.text("Could not create backup: \(error.localizedDescription)") }
+    }
+
+    func openDataFolder() {
+        let directory = file.url.deletingLastPathComponent()
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            NSWorkspace.shared.open(directory)
+        } catch { storageError = L10n.text("Could not open the data folder: \(error.localizedDescription)") }
+    }
+
+    func chooseBackupToRestore() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = L10n.text("Choose Backup")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        let confirmation = NSAlert()
+        confirmation.alertStyle = .warning
+        confirmation.messageText = L10n.text("Restore this backup?")
+        confirmation.informativeText = L10n.text("This replaces your current tasks, history and settings. A copy of your current data will stay in the data folder.")
+        confirmation.addButton(withTitle: L10n.text("Restore"))
+        confirmation.addButton(withTitle: L10n.text("Cancel"))
+        guard confirmation.runModal() == .alertFirstButtonReturn else { return }
+
+        do { try restoreBackup(from: url) }
+        catch { storageError = L10n.text("Could not restore backup: \(error.localizedDescription)") }
+    }
+
+    func restoreBackup(from url: URL) throws {
+        let backup = try LedgerEnvelope.readBackup(from: url)
+        let date = Date()
+        var restored = backup.ledger
+        restored.recoverAfterRelaunch(lastCheckpoint: backup.savedAt, at: date)
+        if restored.visibleCategories.isEmpty { restored.categories.append(TimeCategory(name: L10n.text("Personal"), color: .mint)) }
+        restored.materializeDailyTasks(on: date)
+
+        writer.flush()
+        try file.replace(with: LedgerEnvelope(savedAt: date, ledger: restored), preserving: isStorageReadOnly ? nil : ledger)
+
+        saveRevision += 1
+        lastScheduledLedger = restored
+        lastCheckpoint = date
+        saveFailed = false
+        isStorageReadOnly = false
+        storageError = nil
+        now = date
+        ledger = restored
+        title = active?.title ?? ""
+        selectedTaskID = active?.taskID
+        selectedCategoryID = active?.categoryID
+            ?? categories.first(where: { $0.id == ledger.preferences.lastCategoryID })?.id
+            ?? categories[0].id
+        mode = active?.mode ?? ledger.preferences.lastMode
+        minutes = max(1, min(480, ledger.preferences.defaultMinutes))
+        lastCompleted = nil
+        taskDay = Calendar.current.startOfDay(for: date)
+        selectedDay = taskDay
+        compactEditor = nil
+        page = .focus
+        configureTicker()
+        onStatusChanged?()
     }
 }
