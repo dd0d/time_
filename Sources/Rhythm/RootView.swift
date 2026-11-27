@@ -57,7 +57,7 @@ private struct CompactMenuView: View {
                 .contextMenu { QuickCategoryMenuContent() }
                 VStack(alignment: .leading, spacing: 2) {
                     Button { store.compactEditor = store.compactEditor == .timer ? nil : .timer } label: {
-                        Text(time).font(.system(size: time.count > 5 ? 22 : 26, weight: .semibold)).monospacedDigit().tracking(-0.8)
+                        Text(time).timeDisplay(size: time.count > 5 ? 22 : 26)
                             .foregroundStyle(store.active?.isPaused == true ? Color.secondary : Color.primary)
                     }
                     .buttonStyle(.plain).accessibilityLabel(L10n.text("Time ") + time + L10n.text(". Mode and duration"))
@@ -65,7 +65,7 @@ private struct CompactMenuView: View {
                         HStack(spacing: 4) {
                             Image(systemName: store.storageError != nil ? "exclamationmark.triangle" : "tag").font(.system(size: 10))
                             Text(compactTitle)
-                                .font(.system(size: 12)).lineLimit(1)
+                                .font(AppTypography.body).lineLimit(1)
                         }
                         .foregroundStyle(store.storageError != nil ? Color.orange : store.accentColor)
                         .contentShape(Rectangle())
@@ -73,7 +73,11 @@ private struct CompactMenuView: View {
                     .buttonStyle(.plain).accessibilityLabel(L10n.text("Task and category"))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                moreMenu.padding(.top, 1)
+                HStack(spacing: 2) {
+                    PanelPinButton(size: 22)
+                    moreMenu
+                }
+                .padding(.top, 1)
             }
             .frame(height: 50)
             HStack(spacing: 7) {
@@ -117,16 +121,26 @@ private struct CompactMenuView: View {
             Button(L10n.text("Categories…"), systemImage: "tag") { store.page = .categories }
             Button(L10n.text("Settings…"), systemImage: "gearshape") { store.page = .settings }
             Divider()
-            Button(store.isPinned ? L10n.text("Unpin Panel") : L10n.text("Pin Panel"), systemImage: store.isPinned ? "pin.slash" : "pin") {
-                store.isPinned.toggle(); store.onPinChanged?()
-            }
-            Divider()
             Button(L10n.text("Quit time_"), systemImage: "power") { NSApplication.shared.terminate(nil) }
         } label: {
-            Image(systemName: store.isPinned ? "pin.fill" : "ellipsis")
-                .font(.system(size: store.isPinned ? 11 : 15)).foregroundStyle(.secondary).frame(width: 17, height: 17)
+            Image(systemName: "ellipsis")
+                .font(.system(size: 14)).foregroundStyle(.secondary).frame(width: 22, height: 22)
         }
         .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().accessibilityLabel(L10n.text("App menu"))
+    }
+}
+
+private struct PanelPinButton: View {
+    @EnvironmentObject private var store: AppStore
+    var size: CGFloat = 28
+
+    var body: some View {
+        let title = store.isPinned ? L10n.text("Unpin Panel") : L10n.text("Pin Panel")
+        QuietIconButton(symbol: store.isPinned ? "pin.fill" : "pin", help: title, selected: store.isPinned, size: size) {
+            store.isPinned.toggle()
+            store.onPinChanged?()
+        }
+        .help(title)
     }
 }
 
@@ -195,7 +209,7 @@ private struct OrbButtonStyle: ButtonStyle {
 
 struct CompactButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.system(size: 12, weight: .medium)).foregroundStyle(.primary.opacity(0.8))
+        configuration.label.font(AppTypography.rowTitle).foregroundStyle(.primary.opacity(0.8))
             .frame(height: 24)
             .background(.primary.opacity(configuration.isPressed ? 0.14 : 0.055), in: RoundedRectangle(cornerRadius: 6))
             .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.primary.opacity(0.065), lineWidth: 0.6))
@@ -215,11 +229,9 @@ private struct ExpandedMenuView: View {
                 if isUtility {
                     QuietIconButton(symbol: "chevron.left", help: L10n.text("Back")) { store.page = store.page == .analytics ? .summary : store.lastMainPage }
                 } else { RhythmMark(size: 19).foregroundStyle(store.accentColor) }
-                Text(isUtility ? store.page.title : "time_").font(.system(size: 14, weight: .semibold))
+                Text(isUtility ? store.page.title : "time_").font(AppTypography.panelTitle)
                 Spacer()
-                QuietIconButton(symbol: store.isPinned ? "pin.fill" : "pin", help: store.isPinned ? L10n.text("Unpin Panel") : L10n.text("Pin Panel"), selected: store.isPinned) {
-                    store.isPinned.toggle(); store.onPinChanged?()
-                }
+                PanelPinButton()
                 QuietIconButton(symbol: "rectangle.compress.vertical", help: L10n.text("Collapse panel")) { store.page = .focus }
             }
             .padding(.horizontal, 20).padding(.top, 15).padding(.bottom, 13)
@@ -243,7 +255,7 @@ private struct ExpandedMenuView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     if let error = store.storageError {
-                        Text(error).font(.system(size: 11)).foregroundStyle(.orange).frame(maxWidth: .infinity, alignment: .leading)
+                        Text(error).font(AppTypography.detail).foregroundStyle(.orange).frame(maxWidth: .infinity, alignment: .leading)
                     }
                     switch store.page {
                     case .session: ExpandedFocusView()
@@ -274,7 +286,7 @@ private struct ExpandedMenuView: View {
                 Spacer(minLength: 4)
                 Text(TimeText.duration(store.totalToday)).monospacedDigit().foregroundStyle(.tertiary)
             }
-            .font(.system(size: 10)).buttonStyle(.plain).padding(.horizontal, 21).padding(.vertical, 13)
+            .font(AppTypography.small).buttonStyle(.plain).padding(.horizontal, 21).padding(.vertical, 13)
         }
     }
 }
@@ -301,7 +313,7 @@ private struct ExpandedFocusView: View {
                         Text(L10n.text("Idle time · ") + TimeText.duration(review.duration(at: store.now)))
                         Spacer()
                         Text(L10n.text("Review")).foregroundStyle(store.accentColor)
-                    }.font(.system(size: 11)).cardSurface(padding: 12)
+                    }.font(AppTypography.detail).cardSurface(padding: 12)
                 }.buttonStyle(.plain)
             }
             VStack(spacing: 15) {
@@ -317,22 +329,22 @@ private struct ExpandedFocusView: View {
                     Spacer()
                     if changedActiveDetails {
                         Button(L10n.text("Save")) { store.updateSessionDetails(title: store.title, categoryID: store.selectedCategoryID) }
-                            .buttonStyle(.borderless).font(.system(size: 11))
+                            .buttonStyle(.borderless).font(AppTypography.detail)
                     }
                 }
                 VStack(spacing: 5) {
                     Text(time).timeDisplay(size: time.count > 5 ? 42 : 54)
                     Text(store.active == nil && store.mode == .pomodoro ? store.pomodoroPhase.title : store.phaseCaption)
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                        .font(AppTypography.detail).foregroundStyle(.secondary)
                 }.padding(.vertical, 5)
                 if let active = store.active {
                     if active.mode.isTimed {
                         AccentProgress(value: active.elapsed(at: store.now) / max(1, active.targetSeconds))
                         HStack {
-                            Text(L10n.text("Elapsed ") + TimeText.duration(active.elapsed(at: store.now))).font(.system(size: 10)).foregroundStyle(.secondary)
+                            Text(L10n.text("Elapsed ") + TimeText.duration(active.elapsed(at: store.now))).font(AppTypography.small).foregroundStyle(.secondary)
                             Spacer()
-                            if active.mode == .countdown { Button(L10n.text("+ 5 min")) { store.extendTimer() }.buttonStyle(.plain).font(.system(size: 11)) }
-                            if active.isBreak { Button(L10n.text("Skip")) { store.skipPomodoroBreak() }.buttonStyle(.plain).font(.system(size: 11)) }
+                            if active.mode == .countdown { Button(L10n.text("+ 5 min")) { store.extendTimer() }.buttonStyle(.plain).font(AppTypography.detail) }
+                            if active.isBreak { Button(L10n.text("Skip")) { store.skipPomodoroBreak() }.buttonStyle(.plain).font(AppTypography.detail) }
                         }
                     }
                     HStack(spacing: 8) {
@@ -353,7 +365,7 @@ private struct ExpandedFocusView: View {
                             Spacer(minLength: 1)
                             TextField(L10n.text("Minutes"), value: $store.minutes, format: .number).textFieldStyle(.roundedBorder).frame(width: 37)
                             Stepper(L10n.text("Minutes"), value: $store.minutes, in: 1...480).labelsHidden()
-                        }.font(.system(size: 10)).controlSize(.small)
+                        }.font(AppTypography.small).controlSize(.small)
                     }
                     if store.mode == .pomodoro { pomodoroSummary }
                     Button(action: commit) { Label(store.mode == .pomodoro ? (store.pomodoroPhase.isBreak ? L10n.text("Start Break") : L10n.text("Start Focus")) : L10n.text("Start"), systemImage: "play.fill") }
@@ -365,7 +377,7 @@ private struct ExpandedFocusView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(store.accentColor)
                     Text((completed.isBreak ? L10n.text("Break ended · ") : L10n.text("Saved · ")) + TimeText.duration(completed.elapsed(at: completed.endedAt ?? store.now)))
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                        .font(AppTypography.detail).foregroundStyle(.secondary)
                     Spacer()
                     QuietIconButton(symbol: "xmark", help: L10n.text("Dismiss")) { store.lastCompleted = nil }
                 }
@@ -394,15 +406,15 @@ private struct ExpandedFocusView: View {
                 }
                 Spacer()
                 Text(L10n.text("\(settings.focusMinutes) / \(settings.shortBreakMinutes) / \(settings.longBreakMinutes) min"))
-                    .font(.system(size: 10)).foregroundStyle(.secondary)
+                    .font(AppTypography.small).foregroundStyle(.secondary)
             }
             HStack {
-                Text(settings.autoStartBreaks ? L10n.text("Breaks start automatically. Start the next focus session when ready.") : L10n.text("Start each phase manually.")).font(.system(size: 10)).foregroundStyle(.secondary)
+                Text(settings.autoStartBreaks ? L10n.text("Breaks start automatically. Start the next focus session when ready.") : L10n.text("Start each phase manually.")).font(AppTypography.small).foregroundStyle(.secondary)
                 Spacer(minLength: 4)
                 if store.pomodoroPhase.isBreak {
-                    Button(L10n.text("Skip")) { store.skipPomodoroBreak() }.font(.system(size: 10)).buttonStyle(.plain).foregroundStyle(store.accentColor)
+                    Button(L10n.text("Skip")) { store.skipPomodoroBreak() }.font(AppTypography.small).buttonStyle(.plain).foregroundStyle(store.accentColor)
                 } else if completed > 0 {
-                    Button(L10n.text("Reset")) { store.resetPomodoro() }.font(.system(size: 10)).buttonStyle(.plain).foregroundStyle(store.accentColor)
+                    Button(L10n.text("Reset")) { store.resetPomodoro() }.font(AppTypography.small).buttonStyle(.plain).foregroundStyle(store.accentColor)
                 }
             }
         }
@@ -416,14 +428,14 @@ struct DayNavigation: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(store.isToday ? L10n.text("Today") : store.selectedDay.formatted(.dateTime.locale(L10n.locale).day().month(.wide)))
-                    .font(.system(size: 21, weight: .semibold))
+                    .font(AppTypography.pageTitle)
                 Text(dayCaption)
-                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                    .font(AppTypography.detail).foregroundStyle(.secondary)
             }
             Spacer()
             if !store.isToday {
                 Button(L10n.text("Today")) { store.selectedDay = Calendar.current.startOfDay(for: Date()) }
-                    .font(.system(size: 10)).buttonStyle(.plain).foregroundStyle(.secondary)
+                    .font(AppTypography.small).buttonStyle(.plain).foregroundStyle(.secondary)
             }
             HStack(spacing: 1) {
                 QuietIconButton(symbol: "chevron.left", help: L10n.text("Previous day")) { store.changeDay(-1, allowsFuture: allowsFuture) }
@@ -450,10 +462,10 @@ struct CategoryProgress: View {
         VStack(spacing: 7) {
             HStack(spacing: 7) {
                 Circle().fill(category.color.tint).frame(width: 6, height: 6)
-                Text(category.name).font(.system(size: 12)).lineLimit(1)
+                Text(category.name).font(AppTypography.body).lineLimit(1)
                 Spacer(minLength: 4)
                 Text(TimeText.duration(tracked)).font(.system(size: 11, weight: .medium)).monospacedDigit()
-                if goal > 0 { Text("/ " + TimeText.duration(Double(goal * 60))).font(.system(size: 10)).foregroundStyle(.secondary).monospacedDigit() }
+                if goal > 0 { Text("/ " + TimeText.duration(Double(goal * 60))).font(AppTypography.small).foregroundStyle(.secondary).monospacedDigit() }
             }
             if goal > 0 {
                 GeometryReader { geometry in

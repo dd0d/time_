@@ -36,11 +36,11 @@ struct SummaryView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(L10n.text("Focus time")).font(.system(size: 11)).foregroundStyle(.secondary)
-                        Text(TimeText.duration(store.totalSelectedDay)).timeDisplay(size: 27)
+                        Text(L10n.text("Focus time")).font(AppTypography.detail).foregroundStyle(.secondary)
+                        Text(TimeText.duration(store.totalSelectedDay)).timeDisplay(size: AppTypography.totalSize)
                         if planned > 0 {
                             Text(L10n.text("of ") + TimeText.duration(Double(planned * 60)) + L10n.text(" planned"))
-                                .font(.system(size: 11)).foregroundStyle(.secondary)
+                                .font(AppTypography.detail).foregroundStyle(.secondary)
                         }
                     }
                     Spacer()
@@ -50,7 +50,7 @@ struct SummaryView: View {
                             .stroke(store.accentColor, style: StrokeStyle(lineWidth: 5, lineCap: .round)).rotationEffect(.degrees(-90))
                         if planned > 0 {
                             Text("\(Int(min(1, store.totalSelectedDay / Double(planned * 60)) * 100))%")
-                                .font(.system(size: 12, weight: .medium)).monospacedDigit()
+                                .font(AppTypography.rowTitle).monospacedDigit()
                         } else {
                             Image(systemName: "leaf").font(.system(size: 19, weight: .ultraLight)).foregroundStyle(.secondary)
                         }
@@ -153,9 +153,9 @@ struct SummaryView: View {
         return HStack(alignment: .center, spacing: 9) {
             RoundedRectangle(cornerRadius: 2).fill(store.ledger.category(session.categoryID)?.color.tint ?? store.accentColor).frame(width: 3, height: 29)
             VStack(alignment: .leading, spacing: 5) {
-                Text(session.displayTitle).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                Text(session.displayTitle).font(AppTypography.rowTitle).lineLimit(1)
                 Text(max(dayStart, session.startedAt).formatted(.dateTime.locale(L10n.locale).hour().minute()) + " · " + (active ? (session.isPaused ? L10n.text("paused") : L10n.text("now")) : min(dayEnd, session.endedAt!).formatted(.dateTime.locale(L10n.locale).hour().minute())))
-                    .font(.system(size: 10)).foregroundStyle(.secondary).monospacedDigit()
+                    .font(AppTypography.detail).foregroundStyle(.secondary).monospacedDigit()
             }
             Spacer(minLength: 4)
             Text(TimeText.duration(session.duration(on: store.selectedDay, at: store.now)))

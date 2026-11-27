@@ -16,11 +16,11 @@ struct SettingsView: View {
                     .accessibilityLabel(L10n.text("Interface language"))
                 if language != L10n.language {
                     Text(L10n.text("Quit and reopen time_ to apply the language."))
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                        .font(AppTypography.detail).foregroundStyle(.secondary)
                 }
             }
             VStack(alignment: .leading, spacing: 9) {
-                Text(L10n.text("APPEARANCE")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text(L10n.text("APPEARANCE")).font(AppTypography.section).foregroundStyle(.secondary)
                 AppSegments(selection: $store.ledger.preferences.appearance, options: ["system", "light", "dark"], title: { $0 == "system" ? L10n.text("System") : $0 == "light" ? L10n.text("Light") : L10n.text("Dark") })
                     .onChange(of: store.ledger.preferences.appearance) { _, _ in store.save() }
             }
@@ -28,10 +28,10 @@ struct SettingsView: View {
             menuBarSettings
             accentSettings
             VStack(alignment: .leading, spacing: 10) {
-                Text(L10n.text("COMPACT PANEL")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text(L10n.text("COMPACT PANEL")).font(AppTypography.section).foregroundStyle(.secondary)
                 settingToggle(L10n.text("Animate logo"), symbol: "arrow.triangle.2.circlepath", binding: preference(\.animateLogo))
                 Text(L10n.text("Controls logo motion, including when Reduce Motion is enabled in macOS."))
-                    .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    .font(AppTypography.small).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             pomodoroSettings
             idleSettings
@@ -44,15 +44,15 @@ struct SettingsView: View {
             .cardSurface(padding: 14)
 
             if let loginError {
-                Text(loginError).font(.system(size: 10)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                Text(loginError).font(AppTypography.small).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
             }
             if SMAppService.mainApp.status == .requiresApproval {
-                Button(L10n.text("Allow in System Settings…")) { SMAppService.openSystemSettingsLoginItems() }.font(.system(size: 11))
+                Button(L10n.text("Allow in System Settings…")) { SMAppService.openSystemSettingsLoginItems() }.font(AppTypography.detail)
             }
             Text(L10n.text("The timer pauses when your Mac sleeps. Resume it manually after waking."))
-                .font(.system(size: 10)).foregroundStyle(.secondary).lineSpacing(3)
+                .font(AppTypography.small).foregroundStyle(.secondary).lineSpacing(3)
             VStack(alignment: .leading, spacing: 10) {
-                Text(L10n.text("DATA")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text(L10n.text("DATA")).font(AppTypography.section).foregroundStyle(.secondary)
                 Button(L10n.text("Export History as CSV…")) { store.exportCSV() }
                 Button(L10n.text("Save Backup…")) { store.exportBackup() }
                 Button(L10n.text("Open Data Folder")) {
@@ -61,14 +61,14 @@ struct SettingsView: View {
                     NSWorkspace.shared.open(directory)
                 }
             }
-            .font(.system(size: 11))
+            .font(AppTypography.detail)
             HStack {
                 RhythmMark(size: 14).foregroundStyle(.tertiary)
                 if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
-                    Text("time_ \(version)").font(.system(size: 10)).foregroundStyle(.tertiary)
+                    Text("time_ \(version)").font(AppTypography.small).foregroundStyle(.tertiary)
                 }
                 Spacer()
-                Text(L10n.text("Stored on this Mac")).font(.system(size: 10)).foregroundStyle(.tertiary)
+                Text(L10n.text("Stored on this Mac")).font(AppTypography.small).foregroundStyle(.tertiary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,29 +78,29 @@ struct SettingsView: View {
     private var glassSettings: some View {
         VStack(alignment: .leading, spacing: 13) {
             HStack {
-                Text(L10n.text("PANEL TRANSPARENCY")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text(L10n.text("PANEL TRANSPARENCY")).font(AppTypography.section).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.text("Reset")) {
                     store.ledger.preferences.backgroundOpacity = GlassStyle.defaultOpacity
                     store.ledger.preferences.backgroundBlur = GlassStyle.defaultBlur
                     store.save()
                 }
-                .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(store.accentColor)
+                .buttonStyle(.plain).font(AppTypography.small).foregroundStyle(store.accentColor)
             }
             glassSlider(L10n.text("Background opacity"), value: $store.ledger.preferences.backgroundOpacity)
             glassSlider(L10n.text("Blur"), value: $store.ledger.preferences.backgroundBlur)
             Text(L10n.text("Applies to the panel background."))
-                .font(.system(size: 10)).foregroundStyle(.tertiary).fixedSize(horizontal: false, vertical: true)
+                .font(AppTypography.small).foregroundStyle(.tertiary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func glassSlider(_ title: String, value: Binding<Double>) -> some View {
         VStack(spacing: 4) {
             HStack {
-                Text(title).font(.system(size: 11))
+                Text(title).font(AppTypography.detail)
                 Spacer()
                 Text("\(Int((value.wrappedValue * 100).rounded()))%")
-                    .font(.system(size: 10)).monospacedDigit().foregroundStyle(.secondary)
+                    .font(AppTypography.small).monospacedDigit().foregroundStyle(.secondary)
             }
             AccentSlider(value: value, accessibilityTitle: title, onEditingChanged: { editing in if !editing { store.save() } })
         }
@@ -108,21 +108,21 @@ struct SettingsView: View {
 
     private var menuBarSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.text("MENU BAR")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            Text(L10n.text("MENU BAR")).font(AppTypography.section).foregroundStyle(.secondary)
             settingToggle(L10n.text("Show time"), symbol: "clock", binding: preference(\.showMenuBarTime))
             HStack {
-                Text(L10n.text("Icon")).font(.system(size: 12)).foregroundStyle(.secondary)
+                Text(L10n.text("Icon")).font(AppTypography.body).foregroundStyle(.secondary)
                 Spacer()
                 SelectionDropdown(selection: $store.ledger.preferences.menuBarIcon, options: MenuBarIcon.allCases, title: { $0.title }, accessibilityTitle: L10n.text("Menu bar icon"))
                     .frame(width: 140).onChange(of: store.ledger.preferences.menuBarIcon) { _, _ in store.save() }
             }
-            Text(L10n.text("Show the timer during an active session.")).font(.system(size: 10)).foregroundStyle(.tertiary)
+            Text(L10n.text("Show the timer during an active session.")).font(AppTypography.small).foregroundStyle(.tertiary)
         }
     }
 
     private var accentSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.text("ACCENT COLOR")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            Text(L10n.text("ACCENT COLOR")).font(AppTypography.section).foregroundStyle(.secondary)
             HStack {
                 Button {
                     store.ledger.preferences.accentChoice = .system
@@ -130,11 +130,11 @@ struct SettingsView: View {
                 } label: {
                     Label(L10n.text("System"), systemImage: store.ledger.preferences.accentChoice == .system ? "checkmark.circle.fill" : "circle")
                 }
-                .buttonStyle(.plain).font(.system(size: 12))
+                .buttonStyle(.plain).font(AppTypography.body)
                 .foregroundStyle(store.ledger.preferences.accentChoice == .system ? store.accentColor : .secondary)
                 Spacer()
                 ColorPicker(L10n.text("Custom color"), selection: Binding(get: { store.accentColor }, set: { store.setCustomAccent($0) }), supportsOpacity: false)
-                    .font(.system(size: 11)).fixedSize()
+                    .font(AppTypography.detail).fixedSize()
             }
             HStack(spacing: 12) {
                 ForEach(AccentChoice.allCases.filter { $0 != .system && $0 != .custom }, id: \.self) { choice in
@@ -159,7 +159,7 @@ struct SettingsView: View {
 
     private var pomodoroSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.text("POMODORO")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            Text(L10n.text("POMODORO")).font(AppTypography.section).foregroundStyle(.secondary)
             pomodoroStepper(L10n.text("Focus"), value: $store.ledger.preferences.pomodoro.focusMinutes, range: 1...120, suffix: L10n.text("min"))
             pomodoroStepper(L10n.text("Short break"), value: $store.ledger.preferences.pomodoro.shortBreakMinutes, range: 1...30, suffix: L10n.text("min"))
             pomodoroStepper(L10n.text("Long break"), value: $store.ledger.preferences.pomodoro.longBreakMinutes, range: 1...60, suffix: L10n.text("min"))
@@ -170,7 +170,7 @@ struct SettingsView: View {
             settingToggle(L10n.text("Edge glow during breaks"), symbol: "light.beacon.min", binding: preference(\.breakEdgeGlowEnabled))
             if store.ledger.preferences.breakEdgeGlowEnabled { glowSettings }
             Text(L10n.text("Start each focus session manually. Breaks are excluded from work totals."))
-                .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(AppTypography.small).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -181,14 +181,14 @@ struct SettingsView: View {
             HStack {
                 Button(store.isGlowPreviewing ? L10n.text("Stop Preview") : L10n.text("Preview Glow")) {
                     if store.isGlowPreviewing { store.stopGlowPreview() } else { store.showGlowPreview() }
-                }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(store.accentColor)
+                }.buttonStyle(.plain).font(AppTypography.detail).foregroundStyle(store.accentColor)
                 Spacer()
                 Button(L10n.text("Reset")) {
                     store.ledger.preferences.glowWidth = GlowStyle.defaultWidth
                     store.ledger.preferences.glowIntensity = GlowStyle.defaultIntensity
                     store.save()
                     store.showGlowPreview()
-                }.buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(.secondary)
+                }.buttonStyle(.plain).font(AppTypography.small).foregroundStyle(.secondary)
             }
         }.padding(.leading, 26)
     }
@@ -196,9 +196,9 @@ struct SettingsView: View {
     private func glowSlider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>, display: String) -> some View {
         VStack(spacing: 4) {
             HStack {
-                Text(title).font(.system(size: 11))
+                Text(title).font(AppTypography.detail)
                 Spacer()
-                Text(display).font(.system(size: 10)).monospacedDigit().foregroundStyle(.secondary)
+                Text(display).font(AppTypography.small).monospacedDigit().foregroundStyle(.secondary)
             }
             AccentSlider(value: value, range: range, accessibilityTitle: L10n.text("Glow: ") + title, onEditingChanged: { editing in
                 store.showGlowPreview()
@@ -209,25 +209,25 @@ struct SettingsView: View {
 
     private var idleSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.text("IDLE DETECTION")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            Text(L10n.text("IDLE DETECTION")).font(AppTypography.section).foregroundStyle(.secondary)
             settingToggle(L10n.text("Detect idle time"), symbol: "moon.zzz", binding: preference(\.idleCheckEnabled))
             HStack {
-                Text(L10n.text("After")).font(.system(size: 11))
+                Text(L10n.text("After")).font(AppTypography.detail)
                 Spacer()
                 SelectionDropdown(selection: $store.ledger.preferences.idleMinutes, options: [1, 3, 5, 10, 15, 30], title: { L10n.text("\($0) min") }, accessibilityTitle: L10n.text("Idle threshold"))
                     .frame(width: 110).disabled(!store.ledger.preferences.idleCheckEnabled)
                     .onChange(of: store.ledger.preferences.idleMinutes) { _, _ in store.save() }
             }
             Text(L10n.text("The timer pauses when you're idle. Choose whether that time counts when you return."))
-                .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(AppTypography.small).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func pomodoroStepper(_ title: String, value: Binding<Int>, range: ClosedRange<Int>, suffix: String) -> some View {
         HStack {
-            Text(title).font(.system(size: 11))
+            Text(title).font(AppTypography.detail)
             Spacer(minLength: 4)
-            Text("\(value.wrappedValue) \(suffix)").font(.system(size: 11)).monospacedDigit().foregroundStyle(.secondary)
+            Text("\(value.wrappedValue) \(suffix)").font(AppTypography.detail).monospacedDigit().foregroundStyle(.secondary)
             Stepper(title, value: value, in: range).labelsHidden().controlSize(.small)
         }
         .onChange(of: value.wrappedValue) { _, _ in store.save() }
@@ -286,9 +286,9 @@ struct CategoriesView: View {
                                 HStack(spacing: 10) {
                                     Circle().fill(category.color.tint).frame(width: 9, height: 9)
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(category.name).font(.system(size: 12, weight: .medium)).foregroundStyle(.primary)
+                                        Text(category.name).font(AppTypography.rowTitle).foregroundStyle(.primary)
                                         Text(category.dailyGoalMinutes == 0 ? L10n.text("Based on tasks") : TimeText.duration(Double(category.dailyGoalMinutes * 60)) + L10n.text(" per day"))
-                                            .font(.system(size: 10)).foregroundStyle(.secondary)
+                                            .font(AppTypography.small).foregroundStyle(.secondary)
                                     }
                                     Spacer()
                                     Image(systemName: "chevron.right").font(.system(size: 9)).foregroundStyle(store.accentColor)
@@ -306,7 +306,7 @@ struct CategoriesView: View {
                     CategoryArchiveMenu(categories: archived)
                 }
                 Text(L10n.text("Set the goal to zero to use task estimates."))
-                    .font(.system(size: 10)).foregroundStyle(.secondary).lineSpacing(3)
+                    .font(AppTypography.small).foregroundStyle(.secondary).lineSpacing(3)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -315,7 +315,7 @@ struct CategoriesView: View {
     private var editor: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
-                Text(L10n.text("Name")).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(L10n.text("Name")).font(AppTypography.detail).foregroundStyle(.secondary)
                 TextField(L10n.text("For example, a project"), text: $name).textFieldStyle(.roundedBorder)
             }
             HStack(spacing: 13) {
@@ -329,13 +329,13 @@ struct CategoriesView: View {
                 }
             }
             HStack {
-                Text(L10n.text("Daily goal")).font(.system(size: 12)).foregroundStyle(.secondary)
+                Text(L10n.text("Daily goal")).font(AppTypography.body).foregroundStyle(.secondary)
                 Spacer()
                 TextField(L10n.text("Minutes"), value: $goal, format: .number).textFieldStyle(.roundedBorder).frame(width: 55)
-                Text(L10n.text("min")).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(L10n.text("min")).font(AppTypography.detail).foregroundStyle(.secondary)
                 Stepper(L10n.text("Daily goal"), value: $goal, in: 0...1440, step: 15).labelsHidden()
             }
-            Text(L10n.text("Zero uses task estimates.")).font(.system(size: 10)).foregroundStyle(.tertiary)
+            Text(L10n.text("Zero uses task estimates.")).font(AppTypography.small).foregroundStyle(.tertiary)
             Button(editingID == nil ? L10n.text("Create Category") : L10n.text("Save")) {
                 let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !clean.isEmpty else { return }
@@ -348,11 +348,11 @@ struct CategoriesView: View {
             .buttonStyle(PrimaryButton()).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .keyboardShortcut(.return, modifiers: .command)
             HStack {
-                Button(L10n.text("Back")) { isEditing = false }.font(.system(size: 11))
+                Button(L10n.text("Back")) { isEditing = false }.font(AppTypography.detail)
                 Spacer()
                 if let id = editingID {
                     Button(L10n.text("Archive")) { store.archiveCategory(id); isEditing = false }
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                        .font(AppTypography.detail).foregroundStyle(.secondary)
                         .disabled(store.categories.count <= 1 || store.active?.categoryID == id)
                 }
             }
@@ -379,7 +379,7 @@ private struct CategoryArchiveMenu: View {
     var body: some View {
         Button { expanded.toggle() } label: {
             HStack(spacing: 7) {
-                Text(L10n.text("Archive · \(categories.count)")).font(.system(size: 11))
+                Text(L10n.text("Archive · \(categories.count)")).font(AppTypography.detail)
                 Spacer()
                 Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
             }
@@ -391,7 +391,7 @@ private struct CategoryArchiveMenu: View {
         .buttonStyle(.plain).accessibilityLabel(L10n.text("Archived categories: \(categories.count)"))
         .popover(isPresented: $expanded, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 7) {
-                Text(L10n.text("ARCHIVED CATEGORIES")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text(L10n.text("ARCHIVED CATEGORIES")).font(AppTypography.section).foregroundStyle(.secondary)
                     .padding(.horizontal, 9).padding(.top, 5)
                 ScrollView {
                     VStack(spacing: 3) {
@@ -402,7 +402,7 @@ private struct CategoryArchiveMenu: View {
                             } label: {
                                 HStack(spacing: 8) {
                                     Circle().fill(category.color.tint).frame(width: 6, height: 6)
-                                    Text(category.name).font(.system(size: 12)).lineLimit(2)
+                                    Text(category.name).font(AppTypography.body).lineLimit(2)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     Image(systemName: "arrow.uturn.backward").font(.system(size: 10))
                                         .foregroundStyle(store.accentColor)

@@ -181,9 +181,11 @@ struct RhythmMark: View {
 }
 
 struct QuietIconButton: View {
+    @Environment(\.rhythmAccent) private var accent
     let symbol: String
     let help: String
     var selected = false
+    var size: CGFloat = 28
     var action: () -> Void
     @State private var hovered = false
 
@@ -191,9 +193,10 @@ struct QuietIconButton: View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(selected ? Color.primary : Color.secondary)
-                .frame(width: 28, height: 28)
-                .background(.primary.opacity(hovered || selected ? 0.07 : 0), in: RoundedRectangle(cornerRadius: 7))
+                .foregroundStyle(selected ? accent : Color.secondary)
+                .frame(width: size, height: size)
+                .background(selected ? accent.opacity(0.16) : Color.primary.opacity(hovered ? 0.07 : 0),
+                            in: RoundedRectangle(cornerRadius: 7))
         }
         .buttonStyle(.plain)
         .onHover { hovered = $0 }
@@ -256,7 +259,7 @@ struct AccentCheckboxStyle: ToggleStyle {
                         if configuration.isOn { Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundStyle(foreground) }
                     }
                     .frame(width: 15, height: 15)
-                configuration.label.font(.system(size: 12))
+                configuration.label.font(AppTypography.body)
             }
             .contentShape(Rectangle())
         }
@@ -279,6 +282,19 @@ extension View {
     func cardSurface(padding: CGFloat = 14) -> some View { modifier(CardSurface(padding: padding)) }
 }
 
+enum AppTypography {
+    static let pageTitle = Font.system(size: 21, weight: .semibold)
+    static let panelTitle = Font.system(size: 14, weight: .semibold)
+    static let editorTitle = Font.system(size: 16, weight: .semibold)
+    static let section = Font.system(size: 11, weight: .semibold)
+    static let rowTitle = Font.system(size: 12, weight: .medium)
+    static let body = Font.system(size: 12)
+    static let detail = Font.system(size: 11)
+    static let small = Font.system(size: 10)
+    static let totalSize: CGFloat = 27
+    static let metricSize: CGFloat = 18
+}
+
 extension Text {
     func timeDisplay(size: CGFloat) -> some View {
         font(.system(size: size, weight: .medium)).monospacedDigit().tracking(-size / 54)
@@ -290,9 +306,9 @@ struct SectionCaption: View {
     var trailing: String? = nil
     var body: some View {
         HStack {
-            Text(title).font(.system(size: 11, weight: .semibold))
+            Text(title).font(AppTypography.section)
             Spacer()
-            if let trailing { Text(trailing).font(.system(size: 11)).monospacedDigit() }
+            if let trailing { Text(trailing).font(AppTypography.detail).monospacedDigit() }
         }
         .foregroundStyle(.secondary)
     }
@@ -331,7 +347,7 @@ struct EmptyNote: View {
         VStack(spacing: 8) {
             Image(systemName: symbol).font(.system(size: 24, weight: .ultraLight)).foregroundStyle(.tertiary).padding(.bottom, 3)
             Text(title).font(.system(size: 13, weight: .medium))
-            Text(subtitle).font(.system(size: 11)).foregroundStyle(.secondary).multilineTextAlignment(.center).lineSpacing(3)
+            Text(subtitle).font(AppTypography.detail).foregroundStyle(.secondary).multilineTextAlignment(.center).lineSpacing(3)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 22)

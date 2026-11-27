@@ -37,14 +37,14 @@ struct PlanView: View {
             DayNavigation(allowsFuture: true)
             HStack {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(L10n.text("Daily plan")).font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text(L10n.text("Daily plan")).font(AppTypography.detail).foregroundStyle(.secondary)
                     Text(planned > 0 ? TimeText.duration(Double(planned * 60)) : (store.dayTasks.isEmpty ? L10n.text("0 min") : L10n.text("No goal")))
-                        .font(.system(size: 27, weight: .light)).monospacedDigit()
+                        .timeDisplay(size: AppTypography.totalSize)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text(L10n.text("Completed")).font(.system(size: 11)).foregroundStyle(.secondary)
-                    Text("\(finishedCount) / \(store.dayTasks.count)").font(.system(size: 19, weight: .light)).monospacedDigit()
+                    Text(L10n.text("Completed")).font(AppTypography.detail).foregroundStyle(.secondary)
+                    Text("\(finishedCount) / \(store.dayTasks.count)").timeDisplay(size: AppTypography.metricSize)
                 }
             }
             .cardSurface(padding: 17)
@@ -77,7 +77,7 @@ struct PlanView: View {
                                 HStack(spacing: 7) {
                                     Image(systemName: "chevron.right").font(.system(size: 9, weight: .semibold))
                                         .rotationEffect(.degrees(showCompleted ? 90 : 0)).foregroundStyle(store.accentColor)
-                                    Text(L10n.text("Completed · \(completedTasks.count)")).font(.system(size: 11))
+                                    Text(L10n.text("Completed · \(completedTasks.count)")).font(AppTypography.detail)
                                     Spacer()
                                 }
                                 .foregroundStyle(.secondary).contentShape(Rectangle())
@@ -131,7 +131,7 @@ struct PlanView: View {
             .accessibilityLabel((completed ? L10n.text("Mark incomplete: ") : L10n.text("Complete task: ")) + task.title)
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 5) {
-                    Text(task.title).font(.system(size: 12, weight: .medium)).strikethrough(completed).foregroundStyle(completed ? .secondary : .primary).lineLimit(2)
+                    Text(task.title).font(AppTypography.rowTitle).strikethrough(completed).foregroundStyle(completed ? .secondary : .primary).lineLimit(2)
                     if task.dailyScheduleID != nil {
                         Image(systemName: "repeat").font(.system(size: 9)).foregroundStyle(.secondary).help(L10n.text("Daily task"))
                     }
@@ -145,7 +145,7 @@ struct PlanView: View {
                          : (tracked > 0 ? TimeText.duration(tracked) : L10n.text("No time goal")))
                         .monospacedDigit().lineLimit(1)
                 }
-                .font(.system(size: 9)).foregroundStyle(.secondary)
+                .font(AppTypography.detail).foregroundStyle(.secondary)
             }
             Spacer(minLength: 1)
             if !completed {
@@ -177,12 +177,12 @@ struct TaskEditor: View {
         VStack(alignment: .leading, spacing: 18) {
             EditorHeader(title: task == nil ? L10n.text("New Task") : L10n.text("Edit Task"), close: close)
             VStack(alignment: .leading, spacing: 8) {
-                Text(L10n.text("What do you need to do?")).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(L10n.text("What do you need to do?")).font(AppTypography.detail).foregroundStyle(.secondary)
                 TextField(L10n.text("Task name"), text: $title).textFieldStyle(.roundedBorder).focused($titleFocused)
                     .onSubmit { commit() }
             }
             HStack {
-                Text(L10n.text("Category")).font(.system(size: 12)).foregroundStyle(.secondary)
+                Text(L10n.text("Category")).font(AppTypography.body).foregroundStyle(.secondary)
                 Spacer()
                 CategoryPicker(selection: $categoryID, allowsManagement: false)
             }
@@ -192,23 +192,23 @@ struct TaskEditor: View {
                     Spacer()
                     if hasTimeGoal {
                         TextField(L10n.text("Minutes"), value: $minutes, format: .number).textFieldStyle(.roundedBorder).frame(width: 50)
-                        Text(L10n.text("min")).font(.system(size: 11)).foregroundStyle(.secondary)
+                        Text(L10n.text("min")).font(AppTypography.detail).foregroundStyle(.secondary)
                         Stepper(L10n.text("Minutes"), value: $minutes, in: 1...480, step: 5).labelsHidden()
                     }
                 }
                 if !hasTimeGoal {
                     Text(L10n.text("▶ starts a stopwatch."))
-                        .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).lineSpacing(2)
+                        .font(AppTypography.small).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).lineSpacing(2)
                 }
             }
             DatePicker(task?.dailyScheduleID != nil && isDaily ? L10n.text("Task date") : (isDaily ? L10n.text("Starts on") : L10n.text("Date")), selection: $day, displayedComponents: .date)
-                .font(.system(size: 12)).disabled(task?.dailyScheduleID != nil && isDaily)
+                .font(AppTypography.body).disabled(task?.dailyScheduleID != nil && isDaily)
             VStack(alignment: .leading, spacing: 7) {
                 Toggle(L10n.text("Repeat daily"), isOn: $isDaily).toggleStyle(AccentCheckboxStyle())
                 Text(isDaily
                      ? (task?.dailyScheduleID != nil ? L10n.text("Changes apply from this day onward. Each day has its own progress.") : L10n.text("Repeats every day from the selected date."))
                      : (task?.dailyScheduleID != nil ? L10n.text("Future repeats stop. The task stays on the selected day.") : L10n.text("This is a one-time task.")))
-                    .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).lineSpacing(2)
+                    .font(AppTypography.small).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).lineSpacing(2)
             }
             Button(task == nil ? L10n.text("Add to Plan") : L10n.text("Save")) { commit() }
                 .buttonStyle(PrimaryButton()).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -249,7 +249,7 @@ struct EditorHeader: View {
     var close: () -> Void
     var body: some View {
         HStack {
-            Text(title).font(.system(size: 16, weight: .semibold))
+            Text(title).font(AppTypography.editorTitle)
             Spacer()
             QuietIconButton(symbol: "xmark", help: L10n.text("Close"), action: close)
         }

@@ -59,7 +59,7 @@ struct SelectionDropdown<Value: Hashable>: View {
         Button { expanded.toggle() } label: {
             HStack(spacing: 7) {
                 if let color = dot?(selection) { Circle().fill(color).frame(width: 6, height: 6) }
-                Text(title(selection)).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                Text(title(selection)).font(AppTypography.rowTitle).lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold)).foregroundStyle(accent)
             }.foregroundStyle(.primary).padding(.horizontal, 10).frame(height: 31)
@@ -98,7 +98,7 @@ private struct SelectionList<Value: Hashable>: View {
                         } label: {
                             HStack(spacing: 8) {
                                 if let color = dot?(option) { Circle().fill(color).frame(width: 6, height: 6) }
-                                Text(title(option)).font(.system(size: 12)).lineLimit(2).multilineTextAlignment(.leading)
+                                Text(title(option)).font(AppTypography.body).lineLimit(2).multilineTextAlignment(.leading)
                                 Spacer(minLength: 8)
                                 Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold))
                                     .foregroundStyle(store.accentColor).opacity(selection == option ? 1 : 0)
@@ -114,7 +114,7 @@ private struct SelectionList<Value: Hashable>: View {
             if let footerTitle, let footerAction {
                 Divider().padding(.vertical, 3)
                 Button { dismiss(); footerAction() } label: {
-                    Text(footerTitle).font(.system(size: 11)).foregroundStyle(store.accentColor)
+                    Text(footerTitle).font(AppTypography.detail).foregroundStyle(store.accentColor)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10).frame(height: 29)
                 }.buttonStyle(.plain)
             }

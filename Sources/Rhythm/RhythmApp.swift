@@ -29,14 +29,7 @@ final class GlassHostingView<Content: View>: NSHostingView<Content> {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNotificationCenterDelegate {
-    private let store: AppStore = {
-        #if DEBUG
-        if let dataFile = Bundle.main.object(forInfoDictionaryKey: "RhythmQADataFile") as? String {
-            return AppStore(dataURL: URL(fileURLWithPath: dataFile))
-        }
-        #endif
-        return AppStore()
-    }()
+    private let store = AppStore()
     private var statusItem: NSStatusItem!
     private var panel: FloatingPanel!
     private var statusFingerprint = ""
@@ -46,17 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
     private var hotKey: EventHotKeyRef?
     private var hotKeyHandler: EventHandlerRef?
     private let breakEdgeGlow = BreakEdgeGlow()
-    #if DEBUG
-    private var auditMonitor: AuditMonitor?
-    #endif
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        #if DEBUG
-        store.isPinned = Bundle.main.object(forInfoDictionaryKey: "RhythmQAAlwaysVisible") as? Bool == true
-        if let path = Bundle.main.object(forInfoDictionaryKey: "RhythmQAMetricsFile") as? String {
-            auditMonitor = AuditMonitor(url: URL(fileURLWithPath: path))
-        }
-        #endif
         configureMainMenu()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
@@ -119,9 +103,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         registerHotKey()
         updateStatus()
         applyAppearance()
-        #if DEBUG
-        if store.isPinned { showPanel() }
-        #endif
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

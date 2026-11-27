@@ -11,9 +11,9 @@ struct AnalyticsView: View {
         VStack(alignment: .leading, spacing: 18) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.text("Statistics")).font(.system(size: 21, weight: .semibold))
+                    Text(L10n.text("Statistics")).font(AppTypography.pageTitle)
                     Text(L10n.text("Through ") + store.selectedDay.formatted(.dateTime.locale(L10n.locale).day().month(.wide).year()))
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                        .font(AppTypography.detail).foregroundStyle(.secondary)
                 }
                 Spacer()
                 QuietIconButton(symbol: "arrow.clockwise", help: L10n.text("Refresh analytics")) { rebuild() }
@@ -22,9 +22,9 @@ struct AnalyticsView: View {
                 heatmap(report)
                 AppSegments(selection: $period, options: [7, 30, 90, 365], title: { $0 == 365 ? L10n.text("Year") : L10n.text("\($0) days") }).accessibilityLabel(L10n.text("Analytics period"))
                 VStack(alignment: .leading, spacing: 7) {
-                    Text(L10n.text("FOCUS OVER \(period) DAYS")).font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
-                    Text(TimeText.duration(report.totalSeconds)).font(.system(size: 27, weight: .light)).monospacedDigit()
-                    Text(comparison(report)).font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text(L10n.text("FOCUS OVER \(period) DAYS")).font(AppTypography.section).foregroundStyle(.secondary)
+                    Text(TimeText.duration(report.totalSeconds)).timeDisplay(size: AppTypography.totalSize)
+                    Text(comparison(report)).font(AppTypography.detail).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading).cardSurface(padding: 16)
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -36,7 +36,7 @@ struct AnalyticsView: View {
                     metric(L10n.text("Current streak"), value: "\(report.currentStreak)")
                 }
                 Text(L10n.text("Longest streak: \(report.bestStreak) days · Sessions: \(report.sessionCount)"))
-                    .font(.system(size: 10)).foregroundStyle(.secondary)
+                    .font(AppTypography.small).foregroundStyle(.secondary)
                 categoryRanking(report)
                 weekdays(report)
             }
@@ -62,8 +62,8 @@ struct AnalyticsView: View {
 
     private func metric(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text(title).font(.system(size: 11)).foregroundStyle(.secondary)
-            Text(value).font(.system(size: 18, weight: .medium)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+            Text(title).font(AppTypography.detail).foregroundStyle(.secondary)
+            Text(value).timeDisplay(size: AppTypography.metricSize).lineLimit(1).minimumScaleFactor(0.7)
         }.frame(maxWidth: .infinity, alignment: .leading).cardSurface(padding: 12)
     }
 
@@ -71,9 +71,9 @@ struct AnalyticsView: View {
         let weeks = heatmapWeeks(report.days)
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(L10n.text("PAST YEAR")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text(L10n.text("PAST YEAR")).font(AppTypography.section).foregroundStyle(.secondary)
                 Spacer()
-                Text(L10n.text("\(report.days.filter { $0.seconds > 0 }.count) days")).font(.system(size: 10)).foregroundStyle(.secondary)
+                Text(L10n.text("\(report.days.filter { $0.seconds > 0 }.count) days")).font(AppTypography.small).foregroundStyle(.secondary)
             }
             HStack(alignment: .top, spacing: 5) {
                 VStack(spacing: 3) {
@@ -119,15 +119,15 @@ struct AnalyticsView: View {
             if let selectedActivity {
                 HStack(spacing: 6) {
                     Text(selectedActivity.date.formatted(.dateTime.locale(L10n.locale).day().month()) + " · " + TimeText.duration(selectedActivity.seconds))
-                        .font(.system(size: 10)).foregroundStyle(.secondary)
+                        .font(AppTypography.small).foregroundStyle(.secondary)
                     Spacer()
                     Button(L10n.text("View Day")) {
                         store.selectedDay = selectedActivity.date
                         store.page = .summary
-                    }.buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(store.accentColor)
+                    }.buttonStyle(.plain).font(AppTypography.small).foregroundStyle(store.accentColor)
                 }
             } else {
-                Text(L10n.text("Select a day to see its total.")).font(.system(size: 10)).foregroundStyle(.secondary)
+                Text(L10n.text("Select a day to see its total.")).font(AppTypography.small).foregroundStyle(.secondary)
             }
         }.cardSurface(padding: 12)
     }
@@ -154,15 +154,15 @@ struct AnalyticsView: View {
         VStack(alignment: .leading, spacing: 13) {
             SectionCaption(title: L10n.text("BY CATEGORY"))
             if report.categories.isEmpty {
-                Text(L10n.text("No tracked time in this period.")).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(L10n.text("No tracked time in this period.")).font(AppTypography.detail).foregroundStyle(.secondary)
             }
             ForEach(report.categories) { item in
                 let category = store.ledger.category(item.categoryID)
                 VStack(spacing: 6) {
                     HStack {
-                        Text(category?.name ?? L10n.text("Category")).font(.system(size: 11)).lineLimit(1)
+                        Text(category?.name ?? L10n.text("Category")).font(AppTypography.detail).lineLimit(1)
                         Spacer()
-                        Text(TimeText.duration(item.seconds)).font(.system(size: 10)).monospacedDigit()
+                        Text(TimeText.duration(item.seconds)).font(AppTypography.small).monospacedDigit()
                         Text("\(Int(item.seconds / max(1, report.totalSeconds) * 100))%")
                             .font(.system(size: 9)).monospacedDigit().foregroundStyle(.secondary).frame(width: 30, alignment: .trailing)
                     }
@@ -193,7 +193,7 @@ struct AnalyticsView: View {
                         .accessibilityLabel(labels[index] + L10n.text(": average ") + TimeText.duration(report.weekdayAverages[index]))
                 }
             }
-            Text(L10n.text("Average time per weekday")).font(.system(size: 10)).foregroundStyle(.secondary)
+            Text(L10n.text("Average time per weekday")).font(AppTypography.small).foregroundStyle(.secondary)
         }.cardSurface(padding: 13)
     }
 }

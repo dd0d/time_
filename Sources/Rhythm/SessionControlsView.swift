@@ -36,21 +36,21 @@ struct IdleReviewView: View {
             VStack(alignment: .leading, spacing: 21) {
                 VStack(alignment: .leading, spacing: 9) {
                     Image(systemName: "moon.zzz").font(.system(size: 27, weight: .light)).foregroundStyle(store.accentColor)
-                    Text(L10n.text("Idle time")).font(.system(size: 22, weight: .semibold))
+                    Text(L10n.text("Idle time")).font(AppTypography.pageTitle)
                     Text(L10n.text("The timer paused while your Mac was idle. Choose whether to count that time."))
-                        .font(.system(size: 12)).foregroundStyle(.secondary).lineSpacing(3)
+                        .font(AppTypography.body).foregroundStyle(.secondary).lineSpacing(3)
                 }
                 VStack(alignment: .leading, spacing: 9) {
-                    Text(TimeText.duration(review.duration(at: store.now))).font(.system(size: 34, weight: .light)).monospacedDigit()
+                    Text(TimeText.duration(review.duration(at: store.now))).timeDisplay(size: AppTypography.totalSize)
                     Text(review.startedAt.formatted(.dateTime.locale(L10n.locale).hour().minute()) + " · " + (review.returnedAt ?? store.now).formatted(.dateTime.locale(L10n.locale).hour().minute()))
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                        .font(AppTypography.detail).foregroundStyle(.secondary)
                     if let active = store.active {
                         Text(active.displayTitle + " · " + (store.ledger.category(active.categoryID)?.name ?? L10n.text("Category")))
-                            .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
+                            .font(AppTypography.detail).foregroundStyle(.secondary).lineLimit(2)
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading).cardSurface(padding: 17)
                 HStack {
-                    Text(L10n.text("Resume timer")).font(.system(size: 12))
+                    Text(L10n.text("Resume timer")).font(AppTypography.body)
                     Spacer()
                     Toggle(L10n.text("Resume timer"), isOn: $resume).labelsHidden().toggleStyle(AccentSwitchStyle())
                 }
@@ -58,13 +58,13 @@ struct IdleReviewView: View {
                     Button { store.resolveIdle(includeTime: false, resume: resume) } label: { Label(L10n.text("Exclude Idle Time"), systemImage: "minus.circle") }
                         .buttonStyle(PrimaryButton())
                     Button { store.resolveIdle(includeTime: true, resume: resume) } label: {
-                        Text(L10n.text("Count as Work")).font(.system(size: 12)).frame(maxWidth: .infinity).frame(height: 36)
+                        Text(L10n.text("Count as Work")).font(AppTypography.body).frame(maxWidth: .infinity).frame(height: 36)
                             .background(.primary.opacity(0.055), in: RoundedRectangle(cornerRadius: 9))
                     }.buttonStyle(.plain)
                 }
                 Text(L10n.text("If you were working away from the keyboard, you can count the time. The timer stays paused until you decide."))
-                    .font(.system(size: 10)).foregroundStyle(.secondary).lineSpacing(3)
-                Button(L10n.text("Decide Later")) { store.page = .focus }.font(.system(size: 11)).buttonStyle(.plain).foregroundStyle(.secondary)
+                    .font(AppTypography.small).foregroundStyle(.secondary).lineSpacing(3)
+                Button(L10n.text("Decide Later")) { store.page = .focus }.font(AppTypography.detail).buttonStyle(.plain).foregroundStyle(.secondary)
             }
         }
     }
